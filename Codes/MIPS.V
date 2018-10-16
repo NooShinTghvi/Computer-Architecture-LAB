@@ -302,24 +302,16 @@ input          TD_CLK27;            //	TV Decoder 27MHz CLK
 inout	[35:0]	GPIO_0;					//	GPIO Connection 0
 inout	[35:0]	GPIO_1;					//	GPIO Connection 1
 
-//module IF_Stage (input clk,rst , output [31:0] PC,Instruction); 
-wire [31:0] PC1,PC2,PC3,PC4,PC5,Instruction;
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+wire BrTaken,flush;
+wire [4:0]Dest_WB_ID,dest_ID
+wire [31:0] PC_IF,PC_ID,instruction,result_WB_ID,val1,reg2,val2,;
 
-IF_Stage _IF(KEY[2],SW[2],PC1,Instruction);
-//module Reg(input clk,rst,input[31:0] PCin,output reg [31:0] PCout);	
-Reg _ID(clk,rst,PC1,PC2);	
-Reg _EXE(clk,rst,PC2,PC3);
-Reg _MEM(clk,rst,PC3,PC4);
-Reg _WB(clk,rst,PC4,PC5);
+//module IF (input clk,rst,flush,BrTaken, output [31:0] PC,instruction);
+IF _IF(CLOCK_50,SW[0],flush,BrTaken,PC_IF,instruction);
 
-//PCTO7segment(input[3:0] PC,output reg[6:0] sevenSegment);
-PCTO7segment _PCTO7segment0(PC1[5:2],HEX0);
-PCTO7segment _PCTO7segment1(PC2[5:2],HEX1);
-PCTO7segment _PCTO7segment2(PC3[5:2],HEX2);
-PCTO7segment _PCTO7segment3(PC4[5:2],HEX3);
+//module ID(input clk,rst,flush, input[4:0] Dest_WB, input [31:0] instruction,PCIn,result_WB, output reg[4:0] destOut,output reg[31:0] val1,reg2,val2,PCOut,output 
+//		WB_ENout,output reg[1:0] MEM_SignalOut,Branch_TypeOut, output reg[3:0]EXE_CMDout);
 
-PCTO7segment _PCTO7segment4(Instruction[2],HEX4);
-PCTO7segment _PCTO7segment5(Instruction[3],HEX5);
-
-
+ID _ID (CLOCK_50,SW[0],flush,Dest_WB_ID,instruction,PC_IF,result_WB_ID,dest_ID,)
 endmodule
