@@ -18,7 +18,7 @@ module ID
 		output flushOut
 	);
 	wire WB_EnWire;
-	wire [1:0] Branch_TypeIn;
+	wire [1:0] Branch_TypeIn,MEM_SignalIn;
 	wire [3:0] EXE_CMDin;
 	wire [4:0] DestWire;
 	wire [31:0] muxOut,reg1,reg2;
