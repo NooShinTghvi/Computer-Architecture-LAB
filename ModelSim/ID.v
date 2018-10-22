@@ -166,7 +166,7 @@ module IDReg
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module controller(input reg [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm);
-	always @(opcode) begin
+	always @(*) begin
 		case (opcode)
 			6'b000000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm} = 10'b0000000000; // NOP
 			6'b000001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm} = 10'b1000000000; // ADD

@@ -16,7 +16,9 @@ module IFSub (input clk,rst,BrTaken, output reg [31:0] BrAdder,PC,Instruction);
 	    for(i = 0; i < 1024; i = i+1) begin
 	        ram[i] = i;
 		end
+	ram[2] = 32'b10000000000000010000011000001010;
 	end
+	
 	
 	always@(posedge clk,posedge rst) begin
 		if (rst) begin
