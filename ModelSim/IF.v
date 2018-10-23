@@ -1,6 +1,6 @@
-module IF (input clk,rst,flush,BrTaken, output [31:0] PC,instruction);
+module IF (input clk,rst,flush,BrTaken,input [31:0] BrAdder, output [31:0] PC,instruction);
 
-	wire [31:0] BrAdder,PCIn,instructionIn; 
+	wire [31:0] PCIn,instructionIn; 
 		
 	IFSub _IFsub (clk,rst,BrTaken,BrAdder,PCIn,instructionIn);
 	IFReg _IFReg (clk,rst,flush,PCIn,instructionIn,PC,instruction);
@@ -8,9 +8,10 @@ module IF (input clk,rst,flush,BrTaken, output [31:0] PC,instruction);
 endmodule
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module IFSub (input clk,rst,BrTaken, output reg [31:0] BrAdder,PC,Instruction);
+module IFSub (input clk,rst,BrTaken,input [31:0] BrAdder, output [31:0] PC4,output [31:0] Instruction);
 	reg [31:0] ram [0:1023]; //2 ^ 10 = 1024
-	
+	wire [31:0] PCMuxOut;
+	reg [31:0] PC; // 
 	integer i;
 	initial begin	
 	    for(i = 0; i < 1024; i = i+1) begin
@@ -29,18 +30,29 @@ module IFSub (input clk,rst,BrTaken, output reg [31:0] BrAdder,PC,Instruction);
 	ram[10] = 32'b10000000000000010000010000000000;//-- Addi  r1 ,r0 ,1024  
 	end
 	
+	//always@(posedge clk,posedge rst) begin  // PC + 4
+	//	if (rst) begin
+	//		PCWire = 32'd0;
+	//	end
+	//	else begin
+	//		PCWire = PC;
+	//	end
+	//end
 	
-	always@(posedge clk,posedge rst) begin
+	assign PC4 = PC + 4;	// PC + 4
+	
+	Mux2to1_32 _PCBrMux(BrTaken,PC4,BrAdder,PCMuxOut);
+	
+	always@(posedge clk,posedge rst) begin //Read from ram
 		if (rst) begin
 			PC = 32'd0;
-			Instruction = ram[PC];
 		end
 		else begin
-			PC = PC + 4;
-			Instruction = ram[{2'd0,PC[31:2]}];
+			PC = PCMuxOut;
 		end
-			
 	end
+	assign Instruction = ram[{2'd0,PC[31:2]}];
+	
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -57,6 +69,7 @@ module IFReg(input clk,rst,flush, input[31:0] PCin,instructionIn,output reg [31:
 	end
 
 endmodule
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
 	

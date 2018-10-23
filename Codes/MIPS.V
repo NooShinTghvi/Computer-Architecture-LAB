@@ -1,4 +1,5 @@
-// ============================================================================
+// # # # EP2C35F672C6 # # #
+//============================================================================
 // Copyright (c) 2012 by Terasic Technologies Inc.
 // ============================================================================
 //
@@ -303,15 +304,64 @@ inout	[35:0]	GPIO_0;					//	GPIO Connection 0
 inout	[35:0]	GPIO_1;					//	GPIO Connection 1
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-wire BrTaken,flush;
-wire [4:0]Dest_WB_ID,dest_ID
-wire [31:0] PC_IF,PC_ID,instruction,result_WB_ID,val1,reg2,val2,;
+	wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout,WB_En_EXE,WB_En_MEM;
+	wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE;
+	wire [3:0] EXE_CMD_ID;
+	wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM;
+	wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM;
 
-//module IF (input clk,rst,flush,BrTaken, output [31:0] PC,instruction);
-IF _IF(CLOCK_50,SW[0],flush,BrTaken,PC_IF,instruction);
-
-//module ID(input clk,rst,flush, input[4:0] Dest_WB, input [31:0] instruction,PCIn,result_WB, output reg[4:0] destOut,output reg[31:0] val1,reg2,val2,PCOut,output 
-//		WB_ENout,output reg[1:0] MEM_SignalOut,Branch_TypeOut, output reg[3:0]EXE_CMDout);
-
-ID _ID (CLOCK_50,SW[0],flush,Dest_WB_ID,instruction,PC_IF,result_WB_ID,dest_ID,)
+	IF _IF(CLOCK_50,SW[0],flush,BrTaken,BrAdder,PC_IF,instruction);
+	
+	ID _ID (
+		CLOCK_50,SW[0],
+		// from IF
+		instruction,PC_IF,
+		// from WB stage
+		WB_En_IDin,
+		WB_Dest_ID,
+		WB_Data_ID,
+		//to stage register
+		WB_En_IDout,
+		MEM_Signal_ID,Branch_Type_ID,
+		EXE_CMD_ID,
+		val1,val2,reg2_ID,PC_ID,
+		dest_ID,
+		
+		flush_IDin,
+		flush_IDout
+	);
+	
+	Exe _EXE
+	(
+		CLOCK_50,SW[0],
+		// from ID stage to Mem stage : input
+		WB_En_IDout,
+		MEM_Signal_ID,
+		dest_ID,
+		
+		EXE_CMD_ID,
+		val1,val2,reg2_ID,PC_ID,
+		Branch_Type_ID,
+		
+		BrAdder,
+		BrTaken,
+		// from ID stage to Mem stage : output
+		WB_En_EXE,
+		MEM_Signal_EXE,
+		dest_EXE,
+		PC_EXE,ALU_result_EXE,reg2_EXE
+	);
+	
+	MEM _MEM
+	(
+		CLOCK_50,SW[0],
+		WB_En_EXE,
+		//input [1:0] MEM_Signal_EXE,
+		dest_EXE,
+		ALU_result_EXE,
+		
+		WB_En_MEM,
+		dest_MEM,
+		ALU_result_MEM
+	);
 endmodule

@@ -48,7 +48,7 @@ module ID
 		Branch_TypeIn,
 		EXE_CMDin,
 		MEM_SignalIn, 
-		WB_ENWire,
+		WB_EnWire,
 		// to stage register
 		destOut,
 		val1,reg2_,val2,PCOut,

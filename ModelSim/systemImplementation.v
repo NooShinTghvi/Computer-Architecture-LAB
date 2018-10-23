@@ -1,13 +1,13 @@
 `timescale 1ns / 1ns
 
 module systemImplementation(input clk,rst);
-	wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout;
-	wire [1:0] MEM_Signal_ID,Branch_Type_ID;
+	wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout,WB_En_EXE,WB_En_MEM;
+	wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE;
 	wire [3:0] EXE_CMD_ID;
-	wire [4:0] WB_Dest_ID,dest_ID;
-	wire [31:0] PC_IF,PC_ID,instruction,WB_Data_ID,val1,reg2,val2;
+	wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM;
+	wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM;
 
-	IF _IF(clk,rst,flush,BrTaken,PC_IF,instruction);
+	IF _IF(clk,rst,flush,BrTaken,BrAdder,PC_IF,instruction);
 	
 	ID _ID (
 		clk,rst,
@@ -21,10 +21,44 @@ module systemImplementation(input clk,rst);
 		WB_En_IDout,
 		MEM_Signal_ID,Branch_Type_ID,
 		EXE_CMD_ID,
-		val1,val2,reg2,PC_ID,
+		val1,val2,reg2_ID,PC_ID,
 		dest_ID,
 		
 		flush_IDin,
 		flush_IDout
+	);
+	
+	Exe _EXE
+	(
+		clk,rst,
+		// from ID stage to Mem stage : input
+		WB_En_IDout,
+		MEM_Signal_ID,
+		dest_ID,
+		
+		EXE_CMD_ID,
+		val1,val2,reg2_ID,PC_ID,
+		Branch_Type_ID,
+		
+		BrAdder,
+		BrTaken,
+		// from ID stage to Mem stage : output
+		WB_En_EXE,
+		MEM_Signal_EXE,
+		dest_EXE,
+		PC_EXE,ALU_result_EXE,reg2_EXE
+	);
+	
+	MEM _MEM
+	(
+		clk,rst,
+		WB_En_EXE,
+		//input [1:0] MEM_Signal_EXE,
+		dest_EXE,
+		ALU_result_EXE,
+		
+		WB_En_MEM,
+		dest_MEM,
+		ALU_result_MEM
 	);
 endmodule
