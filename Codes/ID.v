@@ -192,7 +192,7 @@ module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Sig
 endmodule 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
-	reg	[31:0] reg_file[0:31];
+	reg	[31:0] reg_file[31:0];
 	integer i;
 	initial begin	
 	    for(i = 0; i < 32; i = i+1) begin

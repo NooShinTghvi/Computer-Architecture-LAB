@@ -10,9 +10,9 @@ module A;
 	end
 	always #20 clk = ~clk;
 	initial begin
-		#20
+		#40
 		rst = 1'b0;
-		#600
+		#10000
 		$stop();
 	end
 endmodule

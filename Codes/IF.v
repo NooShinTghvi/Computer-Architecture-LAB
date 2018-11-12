@@ -9,7 +9,7 @@ endmodule
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module IFSub (input clk,rst,BrTaken,input [31:0] BrAdder, output [31:0] PC4,output [31:0] Instruction);
-	reg [31:0] ram [0:1023]; //2 ^ 10 = 1024
+	reg [31:0] ram [1023:0]; //2 ^ 10 = 1024
 	wire [31:0] PCMuxOut;
 	reg [31:0] PC; // 
 	integer i;
@@ -51,7 +51,7 @@ module IFSub (input clk,rst,BrTaken,input [31:0] BrAdder, output [31:0] PC4,outp
 			PC = PCMuxOut;
 		end
 	end
-	assign Instruction = ram[{2'd0,PC[31:2]}];
+	assign Instruction = ram[{PC[31:2],2'b0}];
 	
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

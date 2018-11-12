@@ -9,7 +9,7 @@ endmodule
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module IFSub (input clk,rst,BrTaken,input [31:0] BrAdder, output [31:0] PC4,output [31:0] Instruction);
-	reg [31:0] ram [0:1023]; //2 ^ 10 = 1024
+	reg [31:0] ram [1023:0]; //2 ^ 10 = 1024
 	wire [31:0] PCMuxOut;
 	reg [31:0] PC; // 
 	integer i;
@@ -18,16 +18,16 @@ module IFSub (input clk,rst,BrTaken,input [31:0] BrAdder, output [31:0] PC4,outp
 	        ram[i] = i;
 		end
 		// 100100 //000001
-	ram[1] = 32'b10000000000000010000011000001010;//-- Addi r1 ,r0 ,1546
-	ram[2] = 32'b10010000000000010001000000000000;//-- Add  r2 ,r0 ,r1 
-	ram[3] = 32'b00001100000000010001100000000000;//-- sub r3 ,r0 ,r1 
-	ram[4] = 32'b00010100010000110010000000000000;//-- And r4 ,r2 ,r3
-	ram[5] = 32'b10000100011001010001101000110100;//-- Subi r5 ,r3 ,6708 
-	ram[6] = 32'b00011000011001000010100000000000;//-- or r5 ,r3 ,r4
-	ram[7] = 32'b00011100101000000011000000000000;//-- nor  r6 ,r5 ,r0 	
-	ram[8] = 32'b00011100100000000101100000000000;//-- nor  r11 ,r4 ,r0 
-	ram[9] = 32'b00001100101001010010100000000000;//-- sub r5 ,r5 ,r5 
-	ram[10] = 32'b10000000000000010000010000000000;//-- Addi  r1 ,r0 ,1024  
+	ram[0] = 32'b10000000000000010000011000001010;//-- Addi r1 ,r0 ,1546
+	ram[4] = 32'b00000100000000010001000000000000;//-- Add  r2 ,r0 ,r1 
+	ram[8] = 32'b00001100000000010001100000000000;//-- sub r3 ,r0 ,r1 
+	ram[12] = 32'b00010100010000110010000000000000;//-- And r4 ,r2 ,r3
+	ram[16] = 32'b10000100011001010001101000110100;//-- Subi r5 ,r3 ,6708 
+	ram[20] = 32'b00011000011001000010100000000000;//-- or r5 ,r3 ,r4
+	ram[24] = 32'b00011100101000000011000000000000;//-- nor  r6 ,r5 ,r0 	
+	ram[28] = 32'b00011100100000000101100000000000;//-- nor  r11 ,r4 ,r0 
+	ram[32] = 32'b00001100101001010010100000000000;//-- sub r5 ,r5 ,r5 
+	ram[36] = 32'b10000000000000010000010000000000;//-- Addi  r1 ,r0 ,1024  
 	end
 	
 	//always@(posedge clk,posedge rst) begin  // PC + 4
@@ -51,13 +51,13 @@ module IFSub (input clk,rst,BrTaken,input [31:0] BrAdder, output [31:0] PC4,outp
 			PC = PCMuxOut;
 		end
 	end
-	assign Instruction = ram[{2'd0,PC[31:2]}];
+	assign Instruction = ram[{PC[31:2],2'b0}];
 	
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 module IFReg(input clk,rst,flush, input[31:0] PCin,instructionIn,output reg [31:0] PC,instruction);
-	always@(posedge clk,rst) begin
+	always@(posedge clk,posedge rst) begin
 		if (rst) begin
 			PC <= 32'd0;
 			instruction <= 32'd0;

@@ -94,7 +94,7 @@ module ALU(input[31:0] val1, val2, input[3:0] selector, output reg[31:0] ALU_res
 			4'b0100: ALU_res <= val1 & val2; // AND
 			4'b0101: ALU_res <= val1 | val2; // OR
 			4'b0110: ALU_res <= !(val1 | val2); // NOR
-			4'b0111: ALU_res <= val1 ^ val2 // XOR
+			4'b0111: ALU_res <= val1 ^ val2; // XOR
 			4'b1000: ALU_res <= val1 << val2; // SLA , SLL
 			4'b1001: ALU_res <= val1 >>> val2; // SRA
 			4'b1010: ALU_res <= val1 >> val2; // SRL
@@ -113,10 +113,8 @@ module ConditionCheck (input[31:0] val1, val2, input[1:0] br_type, output reg is
 	always @(*)begin 
 		// Branch Equal Zero
 		if(br_type == 2'b01) begin
-
 			if(val1 == 0)
 				isBr <= 1;
-
 		end 
 
 		// Branch Not Equal
@@ -128,6 +126,9 @@ module ConditionCheck (input[31:0] val1, val2, input[1:0] br_type, output reg is
 		// Jump
 		else if(br_type == 2'b11) begin
 			isBr <= 1;
+		end
+		else begin 
+			isBr <= 0;
 		end
 	end
 endmodule

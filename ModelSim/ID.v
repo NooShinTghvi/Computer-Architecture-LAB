@@ -135,7 +135,7 @@ module IDReg
 		
 	);
 			
-	always@(posedge clk,rst) begin
+	always@(posedge clk,posedge rst) begin
 		if (rst) begin
 			destOut <= 5'd0;
 			val1 <= 32'd0;
@@ -165,7 +165,7 @@ module IDReg
 			
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module controller(input reg [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm);
+module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm);
 	always @(*) begin
 		case (opcode)
 			6'b000000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm} = 10'b0000000000; // NOP
@@ -192,7 +192,7 @@ module controller(input reg [5:0] opcode, output reg WB_En, output reg [1:0] Mem
 endmodule 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
-	reg	[31:0] reg_file[0:31];
+	reg	[31:0] reg_file[31:0];
 	integer i;
 	initial begin	
 	    for(i = 0; i < 32; i = i+1) begin
@@ -215,8 +215,9 @@ module signExtend(input[15:0] in, output[31:0] out);
 	wire [15:0] sign;
 	generate
 		genvar i;
-		for(i = 0; i < 16; i = i+1)
+		for(i = 0; i < 16; i = i+1) begin : Hi
 			assign sign[i] = in[15];
+		end
 	endgenerate
 	
 	assign out = {sign,in};
