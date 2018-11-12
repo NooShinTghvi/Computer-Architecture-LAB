@@ -1,9 +1,8 @@
 db
 incremental_db
 output_files
-DE2_pin_assignments.csv
-MIPS.qpf
-MIPS.qsf
-MIPS.qsf.bak
-MIPS.qws
-MIPS.V.bak
+*.qpf
+*.qsf
+*.bak
+*.qws
+*.bak
