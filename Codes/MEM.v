@@ -30,7 +30,7 @@ module MEMSub
 		output [31:0] dataMemOut
 	);
 	
-	wire [31:0] addrMapping,
+	wire [31:0] addrMapping;
 	wire [9:0] addrMem;
 	assign addrMapping = ALU_result_EXE - 1024;
 	assign addrMem = {addrMapping[11:2]};
@@ -38,8 +38,8 @@ module MEMSub
 	reg	[31:0] dataMem[1023:0]; //2 ^ 10 = 1024
 	integer i;
 	initial begin	
-	    for(i = 0; i < 63; i = i+1) begin
-	        dataMem[i] = i;
+	    for(i = 0; i < 1024; i = i+1) begin
+	        dataMem[i] = 32'd0;
 		end
 	end
 	
@@ -58,7 +58,7 @@ module MEMReg
 		input clk,rst,
 		input WB_En_in,MEM_R_ENin,
 		input [4:0] dest_in,
-		input [31:0] ALU_result_in,dataMemOut_in
+		input [31:0] ALU_result_in,dataMemOut_in,
 		
 		output reg WB_En,MEM_R_EN,
 		output reg [4:0] dest,

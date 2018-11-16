@@ -6,8 +6,8 @@
 // Permission:
 //
 //   Terasic grants permission to use and modify this code for use
-//   in synthesis for all Terasic Development Boards and Altera Development 
-//   Kits made by Terasic.  Other use of this code, including the selling 
+//   in synthesis for all Terasic Development Boards and Altera Development
+//   Kits made by Terasic.  Other use of this code, including the selling
 //   ,duplication, or modification of any portion is strictly prohibited.
 //
 // Disclaimer:
@@ -16,11 +16,11 @@
 //   which illustrates how these types of functions can be implemented.
 //   It is the user's responsibility to verify their design for
 //   consistency and functionality through the use of formal
-//   verification methods.  Terasic provides no warranty regarding the use 
+//   verification methods.  Terasic provides no warranty regarding the use
 //   or functionality of this code.
 //
 // ============================================================================
-//           
+//
 //  Terasic Technologies Inc
 //  9F., No.176, Sec.2, Gongdao 5th Rd, East Dist, Hsinchu City, 30070. Taiwan
 //
@@ -40,7 +40,7 @@
 //   Ver  :| Author            :| Mod. Date :| Changes Made:
 //   V1.0 :| Johnny Chen       :| 05/08/19  :|      Initial Revision
 //   V1.1 :| Johnny Chen       :| 05/11/16  :|      Added FLASH Address FL_ADDR[21:20]
-//   V1.2 :| Johnny Chen       :| 05/11/16  :|		Fixed ISP1362 INT/DREQ Pin Direction.   
+//   V1.2 :| Johnny Chen       :| 05/11/16  :|		Fixed ISP1362 INT/DREQ Pin Direction.
 //   V1.3 :| Johnny Chen       :| 06/11/16  :|		Added the Dedicated TV Decoder Line-Locked-Clock Input
 //													            for DE2 v2.X PCB.
 //   V1.5 :| Eko    Yan        :| 12/01/30  :|      Update to version 11.1 sp1.
@@ -48,7 +48,7 @@
 
 module MIPS
 	(
-		////////////////////	Clock Input	 	////////////////////	 
+		////////////////////	Clock Input	 	////////////////////
 		CLOCK_27,						//	27 MHz
 		CLOCK_50,						//	50 MHz
 		EXT_CLOCK,						//	External Clock
@@ -77,7 +77,7 @@ module MIPS
 		/////////////////////	SDRAM Interface		////////////////
 		DRAM_DQ,						//	SDRAM Data bus 16 Bits
 		DRAM_ADDR,						//	SDRAM Address bus 12 Bits
-		DRAM_LDQM,						//	SDRAM Low-byte Data Mask 
+		DRAM_LDQM,						//	SDRAM Low-byte Data Mask
 		DRAM_UDQM,						//	SDRAM High-byte Data Mask
 		DRAM_WE_N,						//	SDRAM Write Enable
 		DRAM_CAS_N,						//	SDRAM Column Address Strobe
@@ -85,7 +85,7 @@ module MIPS
 		DRAM_CS_N,						//	SDRAM Chip Select
 		DRAM_BA_0,						//	SDRAM Bank Address 0
 		DRAM_BA_1,						//	SDRAM Bank Address 0
-		DRAM_CLK,						//	SDRAM Clock
+		DRAM_CLOCK_50,						//	SDRAM Clock
 		DRAM_CKE,						//	SDRAM Clock Enable
 		////////////////////	Flash Interface		////////////////
 		FL_DQ,							//	FLASH Data bus 8 Bits
@@ -97,8 +97,8 @@ module MIPS
 		////////////////////	SRAM Interface		////////////////
 		SRAM_DQ,						//	SRAM Data bus 16 Bits
 		SRAM_ADDR,						//	SRAM Address bus 18 Bits
-		SRAM_UB_N,						//	SRAM High-byte Data Mask 
-		SRAM_LB_N,						//	SRAM Low-byte Data Mask 
+		SRAM_UB_N,						//	SRAM High-byte Data Mask
+		SRAM_LB_N,						//	SRAM Low-byte Data Mask
 		SRAM_WE_N,						//	SRAM Write Enable
 		SRAM_CE_N,						//	SRAM Chip Enable
 		SRAM_OE_N,						//	SRAM Output Enable
@@ -126,22 +126,22 @@ module MIPS
 		LCD_DATA,						//	LCD Data bus 8 bits
 		////////////////////	SD_Card Interface	////////////////
 		//SD_DAT,							//	SD Card Data
-		//SD_WP_N,						   //	SD Write protect 
+		//SD_WP_N,						   //	SD Write protect
 		//SD_CMD,							//	SD Card Command Signal
-		//SD_CLK,							//	SD Card Clock
+		//SD_CLOCK_50,							//	SD Card Clock
 		////////////////////	USB JTAG link	////////////////////
 		TDI,  							// CPLD -> FPGA (data in)
-		TCK,  							// CPLD -> FPGA (clk)
+		TCK,  							// CPLD -> FPGA (CLOCK_50)
 		TCS,  							// CPLD -> FPGA (CS)
 	   TDO,  							// FPGA -> CPLD (data out)
 		////////////////////	I2C		////////////////////////////
 		I2C_SDAT,						//	I2C Data
-		I2C_SCLK,						//	I2C Clock
+		I2C_SCLOCK_50,						//	I2C Clock
 		////////////////////	PS2		////////////////////////////
 		PS2_DAT,						//	PS2 Data
-		PS2_CLK,						//	PS2 Clock
+		PS2_CLOCK_50,						//	PS2 Clock
 		////////////////////	VGA		////////////////////////////
-		VGA_CLK,   						//	VGA Clock
+		VGA_CLOCK_50,   						//	VGA Clock
 		VGA_HS,							//	VGA H_SYNC
 		VGA_VS,							//	VGA V_SYNC
 		VGA_BLANK,						//	VGA BLANK
@@ -157,20 +157,20 @@ module MIPS
 		ENET_RD_N,						//	DM9000A Read
 		ENET_RST_N,						//	DM9000A Reset
 		ENET_INT,						//	DM9000A Interrupt
-		ENET_CLK,						//	DM9000A Clock 25 MHz
+		ENET_CLOCK_50,						//	DM9000A Clock 25 MHz
 		////////////////	Audio CODEC		////////////////////////
 		AUD_ADCLRCK,					//	Audio CODEC ADC LR Clock
 		AUD_ADCDAT,						//	Audio CODEC ADC Data
 		AUD_DACLRCK,					//	Audio CODEC DAC LR Clock
 		AUD_DACDAT,						//	Audio CODEC DAC Data
-		AUD_BCLK,						//	Audio CODEC Bit-Stream Clock
+		AUD_BCLOCK_50,						//	Audio CODEC Bit-Stream Clock
 		AUD_XCK,						//	Audio CODEC Chip Clock
 		////////////////	TV Decoder		////////////////////////
 		TD_DATA,    					//	TV Decoder Data bus 8 bits
 		TD_HS,							//	TV Decoder H_SYNC
 		TD_VS,							//	TV Decoder V_SYNC
 		TD_RESET,						//	TV Decoder Reset
-		TD_CLK27,                  //	TV Decoder 27MHz CLK
+		TD_CLOCK_5027,                  //	TV Decoder 27MHz CLOCK_50
 		////////////////////	GPIO	////////////////////////////
 		GPIO_0,							//	GPIO Connection 0
 		GPIO_1							//	GPIO Connection 1
@@ -205,7 +205,7 @@ output  [17:0]	LEDR;					//	LED Red[17:0]
 ///////////////////////		SDRAM Interface	////////////////////////
 inout	  [15:0]	DRAM_DQ;				//	SDRAM Data bus 16 Bits
 output  [11:0]	DRAM_ADDR;				//	SDRAM Address bus 12 Bits
-output			DRAM_LDQM;				//	SDRAM Low-byte Data Mask 
+output			DRAM_LDQM;				//	SDRAM Low-byte Data Mask
 output			DRAM_UDQM;				//	SDRAM High-byte Data Mask
 output			DRAM_WE_N;				//	SDRAM Write Enable
 output			DRAM_CAS_N;				//	SDRAM Column Address Strobe
@@ -213,7 +213,7 @@ output			DRAM_RAS_N;				//	SDRAM Row Address Strobe
 output			DRAM_CS_N;				//	SDRAM Chip Select
 output			DRAM_BA_0;				//	SDRAM Bank Address 0
 output			DRAM_BA_1;				//	SDRAM Bank Address 0
-output			DRAM_CLK;				//	SDRAM Clock
+output			DRAM_CLOCK_50;				//	SDRAM Clock
 output			DRAM_CKE;				//	SDRAM Clock Enable
 ////////////////////////	Flash Interface	////////////////////////
 inout	  [7:0]	FL_DQ;					//	FLASH Data bus 8 Bits
@@ -225,8 +225,8 @@ output			FL_CE_N;				//	FLASH Chip Enable
 ////////////////////////	SRAM Interface	////////////////////////
 inout	 [15:0]	SRAM_DQ;				//	SRAM Data bus 16 Bits
 output [17:0]	SRAM_ADDR;				//	SRAM Address bus 18 Bits
-output			SRAM_UB_N;				//	SRAM High-byte Data Mask 
-output			SRAM_LB_N;				//	SRAM Low-byte Data Mask 
+output			SRAM_UB_N;				//	SRAM High-byte Data Mask
+output			SRAM_LB_N;				//	SRAM Low-byte Data Mask
 output			SRAM_WE_N;				//	SRAM Write Enable
 output			SRAM_CE_N;				//	SRAM Chip Enable
 output			SRAM_OE_N;				//	SRAM Output Enable
@@ -256,20 +256,20 @@ output			LCD_RS;					//	LCD Command/Data Select, 0 = Command, 1 = Data
 //inout	 [3:0]	SD_DAT;					//	SD Card Data
 //input			   SD_WP_N;				   //	SD write protect
 //inout			   SD_CMD;					//	SD Card Command Signal
-//output			SD_CLK;					//	SD Card Clock
+//output			SD_CLOCK_50;					//	SD Card Clock
 ////////////////////////	I2C		////////////////////////////////
 inout			   I2C_SDAT;				//	I2C Data
-output			I2C_SCLK;				//	I2C Clock
+output			I2C_SCLOCK_50;				//	I2C Clock
 ////////////////////////	PS2		////////////////////////////////
 input		 	   PS2_DAT;				//	PS2 Data
-input			   PS2_CLK;				//	PS2 Clock
+input			   PS2_CLOCK_50;				//	PS2 Clock
 ////////////////////	USB JTAG link	////////////////////////////
 input  			TDI;					// CPLD -> FPGA (data in)
-input  			TCK;					// CPLD -> FPGA (clk)
+input  			TCK;					// CPLD -> FPGA (CLOCK_50)
 input  			TCS;					// CPLD -> FPGA (CS)
 output 			TDO;					// FPGA -> CPLD (data out)
 ////////////////////////	VGA			////////////////////////////
-output			VGA_CLK;   				//	VGA Clock
+output			VGA_CLOCK_50;   				//	VGA Clock
 output			VGA_HS;					//	VGA H_SYNC
 output			VGA_VS;					//	VGA V_SYNC
 output			VGA_BLANK;				//	VGA BLANK
@@ -285,95 +285,95 @@ output			ENET_WR_N;				//	DM9000A Write
 output			ENET_RD_N;				//	DM9000A Read
 output			ENET_RST_N;				//	DM9000A Reset
 input			   ENET_INT;				//	DM9000A Interrupt
-output			ENET_CLK;				//	DM9000A Clock 25 MHz
+output			ENET_CLOCK_50;				//	DM9000A Clock 25 MHz
 ////////////////////	Audio CODEC		////////////////////////////
 inout			   AUD_ADCLRCK;			//	Audio CODEC ADC LR Clock
 input			   AUD_ADCDAT;				//	Audio CODEC ADC Data
 inout			   AUD_DACLRCK;			//	Audio CODEC DAC LR Clock
 output			AUD_DACDAT;				//	Audio CODEC DAC Data
-inout			   AUD_BCLK;				//	Audio CODEC Bit-Stream Clock
+inout			   AUD_BCLOCK_50;				//	Audio CODEC Bit-Stream Clock
 output			AUD_XCK;				//	Audio CODEC Chip Clock
 ////////////////////	TV Devoder		////////////////////////////
 input	 [7:0]	TD_DATA;    			//	TV Decoder Data bus 8 bits
 input			   TD_HS;					//	TV Decoder H_SYNC
 input			   TD_VS;					//	TV Decoder V_SYNC
 output			TD_RESET;				//	TV Decoder Reset
-input          TD_CLK27;            //	TV Decoder 27MHz CLK
+input          TD_CLOCK_5027;            //	TV Decoder 27MHz CLOCK_50
 ////////////////////////	GPIO	////////////////////////////////
 inout	[35:0]	GPIO_0;					//	GPIO Connection 0
 inout	[35:0]	GPIO_1;					//	GPIO Connection 1
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout,WB_En_EXE,WB_En_MEM,MEM_R_EN;
-	wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE;
-	wire [3:0] EXE_CMD_ID;
-	wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM;
-	wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM,dataMemOut;
+wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout,WB_En_EXE,WB_En_MEM,MEM_R_EN;
+wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE;
+wire [3:0] EXE_CMD_ID;
+wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM;
+wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM,dataMemOut;
 
-	IF _IF(CLOCK_50,SW[0],flush,BrTaken,BrAdder,PC_IF,instruction);
-	
-	ID _ID (
-		CLOCK_50,SW[0],
-		// from IF
-		instruction,PC_IF,
-		// from WB stage
-		WB_En_IDin,
-		WB_Dest_ID,
-		WB_Data_ID,
-		//to stage register
-		WB_En_IDout,
-		MEM_Signal_ID,Branch_Type_ID,
-		EXE_CMD_ID,
-		val1,val2,reg2_ID,PC_ID,
-		dest_ID,
-		
-		flush_IDin,
-		flush_IDout
-	);
-	
-	Exe _EXE
-	(
-		CLOCK_50,SW[0],
-		// from ID stage to Mem stage : input
-		WB_En_IDout,
-		MEM_Signal_ID,
-		dest_ID,
-		
-		EXE_CMD_ID,
-		val1,val2,reg2_ID,PC_ID,
-		Branch_Type_ID,
-		
-		BrAdder,
-		BrTaken,
-		// from ID stage to Mem stage : output
-		WB_En_EXE,
-		MEM_Signal_EXE,
-		dest_EXE,
-		PC_EXE,ALU_result_EXE,reg2_EXE
-	);
-	
-	MEM _MEM
-	(
-		CLOCK_50,SW[0],
-		WB_En_EXE,
-		MEM_Signal_EXE,
-		dest_EXE,
-		ALU_result_EXE,reg2_EXE
-		
-		WB_En_MEM,MEM_R_EN,
-		dest_MEM,
-		ALU_result_MEM,dataMemOut
-	);
-	
-	WB _WB
-	(
-		WB_En_MEM,MEM_R_EN
-		dest_MEM,
-		dataMemOut,ALU_result_MEM,
-			
-		WB_En_IDin,
-		dest_ID,
-		WB_Data	
-	);
-	
+IF _IF(CLOCK_50,KEY[0],flush,BrTaken,BrAdder,PC_IF,instruction);
+
+ID _ID (
+	CLOCK_50,KEY[0],
+	// from IF
+	instruction,PC_IF,
+	// from WB stage
+	WB_En_IDin,
+	WB_Dest_ID,
+	WB_Data_ID,
+	//to stage register
+	WB_En_IDout,
+	MEM_Signal_ID,Branch_Type_ID,
+	EXE_CMD_ID,
+	val1,val2,reg2_ID,PC_ID,
+	dest_ID,
+
+	flush_IDin,
+	flush_IDout
+);
+
+Exe _EXE
+(
+	CLOCK_50,KEY[0],
+	// from ID stage to Mem stage : input
+	WB_En_IDout,
+	MEM_Signal_ID,
+	dest_ID,
+
+	EXE_CMD_ID,
+	val1,val2,reg2_ID,PC_ID,
+	Branch_Type_ID,
+
+	BrAdder,
+	BrTaken,
+	// from ID stage to Mem stage : output
+	WB_En_EXE,
+	MEM_Signal_EXE,
+	dest_EXE,
+	PC_EXE,ALU_result_EXE,reg2_EXE
+);
+
+MEM _MEM
+(
+	CLOCK_50,KEY[0],
+	WB_En_EXE,
+	MEM_Signal_EXE,
+	dest_EXE,
+	ALU_result_EXE,reg2_EXE,
+
+	WB_En_MEM,MEM_R_EN,
+	dest_MEM,
+	ALU_result_MEM,dataMemOut
+);
+
+WB _WB
+(
+	WB_En_MEM,MEM_R_EN,
+	dest_MEM,
+	dataMemOut,ALU_result_MEM,
+
+	WB_En_IDin,
+	WB_Dest_ID,
+	WB_Data_ID
+);
+
 endmodule
