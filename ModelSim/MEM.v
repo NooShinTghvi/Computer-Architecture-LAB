@@ -38,8 +38,8 @@ module MEMSub
 	reg	[31:0] dataMem[1023:0]; //2 ^ 10 = 1024
 	integer i;
 	initial begin	
-	    for(i = 0; i < 63; i = i+1) begin
-	        dataMem[i] = i;
+	    for(i = 0; i < 1024; i = i+1) begin
+	        dataMem[i] = 32'd0;
 		end
 	end
 	

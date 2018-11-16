@@ -8,11 +8,11 @@ module A;
 		clk = 1'b1;
 		rst = 1'b1;
 	end
-	always #20 clk = ~clk;
+	always #10 clk = ~clk;
 	initial begin
-		#40
+		#20
 		rst = 1'b0;
-		#10000
+		#100000
 		$stop();
 	end
 endmodule

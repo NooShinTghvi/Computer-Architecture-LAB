@@ -69,7 +69,7 @@ module systemImplementation(input clk,rst);
 		dataMemOut,ALU_result_MEM,
 			
 		WB_En_IDin,
-		dest_ID,
-		WB_Data	
+		WB_Dest_ID,
+		WB_Data_ID	
 	);
 endmodule

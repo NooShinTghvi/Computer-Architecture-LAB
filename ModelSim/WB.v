@@ -8,7 +8,7 @@ module WB(
 			output [31:0] result_WB	
 		);
 		
-	assign result_WB = MEM_R_EN ? ALU_result : dataMemOut ;
+	assign result_WB = MEM_R_EN ? dataMemOut : ALU_result;
 	assign destOut = destIn;
 	assign WB_EN_out = WB_EN;
 	
