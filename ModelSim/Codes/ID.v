@@ -92,7 +92,7 @@ wire [31:0] sgnExtendOut;
 
 // **** Registe File ****
 //RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
-RegisterFile _regFile (clk,WB_ENin,instruction[25:21],instruction[20:16],WB_Dest,WB_Data,reg1,reg2);
+RegisterFile _regFile (clk,rst,WB_ENin,instruction[25:21],instruction[20:16],WB_Dest,WB_Data,reg1,reg2);
 
 
 // **** Sign Extend ****
@@ -191,16 +191,15 @@ module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Sig
 	end
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
+module RegisterFile(input clk,rst,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
 	reg	[31:0] reg_file[31:0];
 	integer i;
-	initial begin
-	    for(i = 0; i < 32; i = i+1) begin
-	        reg_file[i] = i;
-		end
-	end
-
     always @(negedge clk) begin
+		if (rst) begin
+			for(i = 0; i < 32; i = i+1) begin
+	        reg_file[i] = 32'd0;
+			end
+		end
 		if (RegWrt && WrtReg!= 0) begin
 			reg_file[WrtReg] <= WrtData;
 		end

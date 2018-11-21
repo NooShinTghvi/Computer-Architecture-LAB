@@ -3,7 +3,7 @@
 module A;
 	reg clk,rst;
 	systemImplementation U(clk,rst);
-	
+
 	initial begin
 		clk = 1'b1;
 		rst = 1'b1;
@@ -12,7 +12,7 @@ module A;
 	initial begin
 		#20
 		rst = 1'b0;
-		#100000
+		#10000
 		$stop();
 	end
 endmodule
