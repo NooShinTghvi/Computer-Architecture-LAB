@@ -5,8 +5,9 @@ module HazardDetect
 
         output reg freez
     );
-
+    
     always @ ( * ) begin
+        freez = 1'b0;
         if (WB_EN_EXE == 1'b1 || WB_EN_MEM == 1'b1) begin
             if (src1 == Dest_EXE || src1 == Dest_MEM) begin
                 freez = 1'b1;

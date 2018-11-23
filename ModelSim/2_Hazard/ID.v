@@ -23,7 +23,7 @@ module ID
 	wire [4:0] DestWire;
 	wire [31:0] muxOut,reg1,reg2;
 	IDsub _IDsub(
-		clk,rst,
+		clk,rst,freez,
 		// from IF
 		instruction,
 		// from WB stage
@@ -66,7 +66,7 @@ endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module IDsub
 	(
-		input clk,rst,
+		input clk,rst,freez,
 		// from IF
 		input [31:0] instruction,
 		// from WB stage
@@ -111,8 +111,15 @@ Mux2to1_32 _mux (is_imm,reg2,sgnExtendOut,muxOut);
 Mux2to1_5 _muxDest (is_imm,instruction[15:11],instruction[20:16],Dest);
 
 // **** CU ****
-//module controller(input[5:0] opcode, output WB_En,output[1:0] Mem_Signals, output[1:0] Branch_Type, output[3:0] Exe_Cmd, output isImm);
-controller _cont(instruction[31:26],WB_EN,MEM_Signal,Branch_Type,EXE_CMD,is_imm,isSrc2);
+wire __WB_EN;
+wire [1:0] __MEM_Signal,__Branch_Type;
+wire [3:0] __EXE_CMD;
+controller _cont(instruction[31:26],__WB_EN,__MEM_Signal,__Branch_Type,__EXE_CMD,is_imm,isSrc2);
+assign WB_EN = (freez == 1'b1) ? 1'b0 : __WB_EN;
+assign MEM_Signal = (freez == 1'b1) ? 2'b0 : __MEM_Signal;
+assign Branch_Type = (freez == 1'b1) ? 2'b0 : __Branch_Type;
+assign EXE_CMD = (freez == 1'b1) ? 4'b0 : __EXE_CMD;
+
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
