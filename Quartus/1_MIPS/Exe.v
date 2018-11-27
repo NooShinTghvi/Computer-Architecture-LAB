@@ -113,24 +113,24 @@ endmodule
 module ConditionCheck (input[31:0] val1, val2, input[1:0] br_type, output reg isBr);
 	
 	always @(*)begin 
-		// Branch Equal Zero
+		isBr = 0;
 		if(br_type == 2'b01) begin
 			if(val1 == 0)
-				isBr <= 1;
+				isBr = 1;
 		end 
 
 		// Branch Not Equal
 		else if(br_type == 2'b10) begin
 			if (val1 != val2)
-				isBr <= 1; 
+				isBr = 1; 
 		end
 
 		// Jump
 		else if(br_type == 2'b11) begin
-			isBr <= 1;
+			isBr = 1;
 		end
 		else begin 
-			isBr <= 0;
+			isBr = 0;
 		end
 	end
 endmodule
