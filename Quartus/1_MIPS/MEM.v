@@ -36,12 +36,12 @@ module MEMSub
 	assign addrMem = {addrMapping[7:2]};
 
 	reg	[31:0] dataMem[63:0]; //2 ^ 6 = 64
-	integer i;
-	initial begin
-	    for(i = 0; i < 63; i = i+1) begin
-	        dataMem[i] = 32'd0;
-		end
-	end
+	//integer i;
+	//initial begin
+	//  for(i = 0; i < 63; i = i+1) begin
+	//      dataMem[i] = 32'd0;
+	//	end
+	//end
 
     always @(posedge clk) begin
 		if (MEM_Signal_EXE[0]) begin

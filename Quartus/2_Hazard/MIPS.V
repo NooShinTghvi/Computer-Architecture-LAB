@@ -304,16 +304,17 @@ inout	[35:0]	GPIO_0;					//	GPIO Connection 0
 inout	[35:0]	GPIO_1;					//	GPIO Connection 1
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout,WB_En_EXE,WB_En_MEM,MEM_R_EN,isSrc2,freez;
+wire BrTaken, WB_En_IDin, WB_En_IDout, WB_En_EXE, WB_En_MEM, MEM_R_EN, isSrc2, freez;
 wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE;
 wire [3:0] EXE_CMD_ID;
-wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM;
+wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM, src1, src2;
 wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM,dataMemOut;
 
-IF _IF(CLOCK_50,SW[0],freez,flush,BrTaken,BrAdder,PC_IF,instruction);
+
+IF _IF(CLOCK_50,SW[0],freez,BrTaken,BrAdder,PC_IF,instruction);
 
 ID _ID (
-	CLOCK_50,SW[0],freez,
+	CLOCK_50,SW[0],freez,BrTaken,
 	// from IF
 	instruction,PC_IF,
 	// from WB stage
@@ -325,15 +326,12 @@ ID _ID (
 	MEM_Signal_ID,Branch_Type_ID,
 	EXE_CMD_ID,
 	val1,val2,reg2_ID,PC_ID,
-	dest_ID,
-
-	flush_IDin,
-	flush_IDout
+	dest_ID, src1, src2
 );
 
 Exe _EXE
 (
-	CLOCK_50,,
+	CLOCK_50,SW[0],
 	// from ID stage to Mem stage : input
 	WB_En_IDout,
 	MEM_Signal_ID,
@@ -378,10 +376,9 @@ WB _WB
 
 HazardDetect _HazardDetect
     (
-        WB_En_EXE,WB_En_MEM,isSrc2,
-        instruction[25:21],instruction[20:16],dest_EXE,dest_MEM,
-
-        output freez
+        WB_En_IDout, WB_En_EXE,isSrc2,
+        src1,src2, dest_ID, dest_EXE,
+        1,
+        freez
     );
-
 endmodule

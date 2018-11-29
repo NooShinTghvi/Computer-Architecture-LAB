@@ -211,16 +211,7 @@ module RegisterFile(input clk,rst,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module signExtend(input[15:0] in, output[31:0] out);
-	wire [15:0] sign;
-	generate
-		genvar i;
-		for(i = 0; i < 16; i = i+1) begin : Hi
-			assign sign[i] = in[15];
-		end
-	endgenerate
-
-	assign out = {sign,in};
-
+	assign out = $signed(in);
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module Mux2to1_32(input s, input [31:0] in0,in1, output [31:0] w);
