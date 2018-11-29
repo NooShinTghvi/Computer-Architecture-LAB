@@ -1,6 +1,6 @@
 module ID
 	(
-		input clk,rst,freez,
+		input clk,rst,freez, flush,
 		// from IF
 		input [31:0] instruction,PCIn,
 		// from WB stage
@@ -13,15 +13,16 @@ module ID
 		output[3:0]EXE_CMDout,
 		output[31:0] val1,val2,reg2_,PCOut,
 		output[4:0] destOut,
-
-		input flushIn,
-		output flushOut
+		output[4:0] src1, src2
 	);
 	wire WB_EnWire;
 	wire [1:0] Branch_TypeIn,MEM_SignalIn;
 	wire [3:0] EXE_CMDin;
 	wire [4:0] DestWire;
 	wire [31:0] muxOut,reg1,reg2;
+	wire __WB_EN;
+	wire [1:0] __MEM_Signal,__Branch_Type;
+	wire [3:0] __EXE_CMD;
 	IDsub _IDsub(
 		clk,rst,freez,
 		// from IF
@@ -40,10 +41,10 @@ module ID
 		// mem_signal
 		MEM_SignalIn,
 		// write back enable
-		WB_EnWire);
+		WB_EnWire, src1, src2);
 
 	IDReg _IDReg(
-		clk,rst,
+		clk,rst, flush,
 		// to stage Register
 		DestWire,
 		reg1,reg2,muxOut,PCIn,
@@ -57,10 +58,7 @@ module ID
 		Branch_TypeOut,
 		EXE_CMDout,
 		MEM_SignalOut,
-		WB_ENout,
-		// from EXE stage
-		lushIn,
-		flushOut);
+		WB_ENout);
 endmodule
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -83,49 +81,51 @@ module IDsub
 		// mem_signal
 		output[1:0] MEM_Signal,
 		// write back enable
-		output WB_EN
+		output WB_EN,
+		output[4:0] source1, source2
 	);
 
-wire is_imm;
-wire [31:0] sgnExtendOut;
+	wire is_imm;
+	wire [31:0] sgnExtendOut;
 
-// * * * * * * * Description * * * * * * *
-// val1 is reg1
-// val2 is muxOut
-// * * * * * * * * * * * * * * * * * * * *
+	// * * * * * * * Description * * * * * * *
+	// val1 is reg1
+	// val2 is muxOut
+	// * * * * * * * * * * * * * * * * * * * *
 
-// **** Registe File ****
-//RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
-RegisterFile _regFile (clk,WB_ENin,instruction[25:21],instruction[20:16],WB_Dest,WB_Data,reg1,reg2);
-
-
-// **** Sign Extend ****
-//module signExtend(input[15:0] in, output[31:0] out);
-signExtend _signExtend(instruction[15:0],sgnExtendOut);
-
-// **** Mux ****
-//module Mux2to1_32(input s, input [31:0] in0,in1, output [31:0] w);
-Mux2to1_32 _mux (is_imm,reg2,sgnExtendOut,muxOut);
-
-// **** Mux ****
-Mux2to1_5 _muxDest (is_imm,instruction[15:11],instruction[20:16],Dest);
-
-// **** CU ****
-wire __WB_EN;
-wire [1:0] __MEM_Signal,__Branch_Type;
-wire [3:0] __EXE_CMD;
-controller _cont(instruction[31:26],__WB_EN,__MEM_Signal,__Branch_Type,__EXE_CMD,is_imm,isSrc2);
-assign WB_EN = (freez == 1'b1) ? 1'b0 : __WB_EN;
-assign MEM_Signal = (freez == 1'b1) ? 2'b0 : __MEM_Signal;
-assign Branch_Type = (freez == 1'b1) ? 2'b0 : __Branch_Type;
-assign EXE_CMD = (freez == 1'b1) ? 4'b0 : __EXE_CMD;
+	// **** Registe File ****
+	//RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31:0] WrtData, output [31:0] RdData1,RdData2);
+	RegisterFile _regFile (clk,WB_ENin,instruction[25:21],instruction[20:16],WB_Dest,WB_Data,reg1,reg2);
 
 
+	// **** Sign Extend ****
+	//module signExtend(input[15:0] in, output[31:0] out);
+	signExtend _signExtend(instruction[15:0],sgnExtendOut);
+
+	// **** Mux ****
+	//module Mux2to1_32(input s, input [31:0] in0,in1, output [31:0] w);
+	Mux2to1_32 _mux (is_imm,reg2,sgnExtendOut,muxOut);
+
+	// **** Mux ****
+	Mux2to1_5 _muxDest (is_imm,instruction[15:11],instruction[20:16],Dest);
+
+	// **** CU ****
+	wire __WB_EN;
+	wire [1:0] __MEM_Signal,__Branch_Type;
+	wire [3:0] __EXE_CMD;
+	controller _cont(instruction[31:26],__WB_EN,__MEM_Signal,__Branch_Type,__EXE_CMD,is_imm,isSrc2);
+
+	assign WB_EN = (freez == 1'b1) ? 1'b0 : __WB_EN;
+	assign MEM_Signal = (freez == 1'b1) ? 2'b0 : __MEM_Signal;
+	assign Branch_Type = (freez == 1'b1) ? 2'b0 : __Branch_Type;
+	assign EXE_CMD = (freez == 1'b1) ? 4'b0 : __EXE_CMD;
+	assign source1 = instruction[25:21];
+	assign source2 = instruction[20:16];
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module IDReg
 	(
-		input clk,rst,
+		input clk,rst, flush,
 		// to stage Register
 		input[4:0] destIn,
 		input[31:0] reg1_in,reg2_in,muxOut,PCIn,
@@ -139,11 +139,7 @@ module IDReg
 		output reg[1:0] Branch_TypeOut,
 		output reg[3:0]EXE_CMDout,
 		output reg[1:0] MEM_SignalOut,
-		output reg WB_ENout,
-		// from EXE stage
-		input flushIn,
-		output reg flushOut
-
+		output reg WB_ENout
 	);
 
 	always@(posedge clk,posedge rst) begin
@@ -157,26 +153,37 @@ module IDReg
 			MEM_SignalOut <= 2'd0;
 			Branch_TypeOut <= 2'd0;
 			EXE_CMDout <= 4'd0;
-			flushOut <= 1'd0;
 		end
 		else begin
-			destOut <= destIn;
-			val1 <= reg1_in;
-			reg2 <= reg2_in;
-			val2 <= muxOut;
-			PCOut <= PCIn;
-			WB_ENout <= WB_ENin;
-			MEM_SignalOut <= MEM_SignalIn;
-			Branch_TypeOut <= Branch_TypeIn;
-			EXE_CMDout <= EXE_CMDin;
-			flushOut <= flushIn;
+			if(flush) begin
+				destOut <= 5'd0;
+				val1 <= 32'd0;
+				reg2 <= 32'd0;
+				val2 <= 32'd0;
+				PCOut <= 32'd0;
+				WB_ENout <= 1'd0;
+				MEM_SignalOut <= 2'd0;
+				Branch_TypeOut <= 2'd0;
+				EXE_CMDout <= 4'd0;
+			end // if(flush)
+			else begin
+				destOut <= destIn;
+				val1 <= reg1_in;
+				reg2 <= reg2_in;
+				val2 <= muxOut;
+				PCOut <= PCIn;
+				WB_ENout <= WB_ENin;
+				MEM_SignalOut <= MEM_SignalIn;
+				Branch_TypeOut <= Branch_TypeIn;
+				EXE_CMDout <= EXE_CMDin;
+			end // else
 		end
 	end
 
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm,isSrc2);
+module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm, isSrc2);
 	always @(*) begin
 		case (opcode)
 			6'b000000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00000000000; // NOP
@@ -223,16 +230,7 @@ module RegisterFile(input clk,RegWrt, input [4:0] RdReg1,RdReg2,WrtReg,input [31
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module signExtend(input[15:0] in, output[31:0] out);
-	wire [15:0] sign;
-	generate
-		genvar i;
-		for(i = 0; i < 16; i = i+1) begin : Hi
-			assign sign[i] = in[15];
-		end
-	endgenerate
-
-	assign out = {sign,in};
-
+	assign out = $signed(in);
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module Mux2to1_32(input s, input [31:0] in0,in1, output [31:0] w);

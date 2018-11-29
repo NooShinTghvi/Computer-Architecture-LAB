@@ -1,16 +1,17 @@
 `timescale 1ns / 1ns
 
 module systemImplementation(input clk,rst);
-wire BrTaken,flush_IDin,flush_IDout,WB_En_IDin,WB_En_IDout,WB_En_EXE,WB_En_MEM,MEM_R_EN,isSrc2,freez;
+wire BrTaken, WB_En_IDin, WB_En_IDout, WB_En_EXE, WB_En_MEM, MEM_R_EN, isSrc2, freez;
 wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE;
 wire [3:0] EXE_CMD_ID;
-wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM;
+wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM, src1, src2;
 wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM,dataMemOut;
 
-IF _IF(clk,rst,freez,flush,BrTaken,BrAdder,PC_IF,instruction);
+
+IF _IF(clk,rst,freez,BrTaken,BrAdder,PC_IF,instruction);
 
 ID _ID (
-	clk,rst,freez,
+	clk,rst,freez,BrTaken,
 	// from IF
 	instruction,PC_IF,
 	// from WB stage
@@ -22,10 +23,7 @@ ID _ID (
 	MEM_Signal_ID,Branch_Type_ID,
 	EXE_CMD_ID,
 	val1,val2,reg2_ID,PC_ID,
-	dest_ID,
-
-	flush_IDin,
-	flush_IDout
+	dest_ID, src1, src2
 );
 
 Exe _EXE
@@ -75,9 +73,9 @@ WB _WB
 
 HazardDetect _HazardDetect
     (
-        WB_En_EXE,WB_En_MEM,isSrc2,
-        instruction[25:21],instruction[20:16],dest_EXE,dest_MEM,
-
+        WB_En_IDout, WB_En_EXE,isSrc2,
+        src1,src2, dest_ID, dest_EXE,
+        1,
         freez
     );
 

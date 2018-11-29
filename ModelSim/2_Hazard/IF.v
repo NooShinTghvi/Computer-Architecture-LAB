@@ -1,9 +1,9 @@
-module IF (input clk,rst,freez,flush,BrTaken,input [31:0] BrAdder, output [31:0] PC,instruction);
+module IF (input clk,rst,freez, BrTaken,input [31:0] BrAdder, output [31:0] PC,instruction);
 
 	wire [31:0] PCIn,instructionIn;
 
 	IFSub _IFsub (clk,rst,freez,BrTaken,BrAdder,PCIn,instructionIn);
-	IFReg _IFReg (clk,rst,freez,flush,PCIn,instructionIn,PC,instruction);
+	IFReg _IFReg (clk,rst,freez, BrTaken, PCIn,instructionIn,PC,instruction);
 
 endmodule
 
@@ -46,7 +46,7 @@ module IFSub (input clk,rst,freez,BrTaken,input [31:0] BrAdder, output [31:0] PC
 		ram[116] = 32'b10000000000000010000000000000011;//-- Addi  r1 ,r0 ,3 **30
 		ram[120] = 32'b10000000000001000000010000000000;//-- Addi r4 ,r0 ,1024
 		ram[124] = 32'b10000000000000100000000000000000;//-- Addi  r2 ,r0 ,0
-		ram[128] = 32'b10000000000000110000000000000001;//-- Addi  r3 ,r0 ,1   <--- Jump 2
+		ram[128] = 32'b10000000000000110000000000000001;//-- Addi  r3 ,x ,1   <--- Jump 2
 		ram[132] = 32'b10000000000010010000000000000010;//-- Addi  r9 ,r0 ,2   <--- Jump 1
 		ram[136] = 32'b00101000011010010100000000000000;//-- sll r8 ,r3 ,r9
 		ram[140] = 32'b00000100100010000100000000000000;//-- Add  r8 ,r4 ,r8
@@ -57,13 +57,13 @@ module IFSub (input clk,rst,freez,BrTaken,input [31:0] BrAdder, output [31:0] PC
 		ram[160] = 32'b10000000000010110000000000010000;//-- Addi r11 ,r0 ,16
 		ram[164] = 32'b00101001010010110101000000000000;//-- sll r10 ,r1 ,r11
 		ram[168] = 32'b00010101001010100100100000000000;//-- And  r9 ,r9 ,r10
-		ram[172] = 32'b10100001001000000000000000000100;//-- Bez r9 ,4
+		ram[172] = 32'b10100001001000000000000000001000;//-- Bez r9 ,4
 		ram[176] = 32'b10010101000001011111111111111100;//-- st r5 ,r8 ,-4
 		ram[180] = 32'b10010101000001100000000000000000;//-- st r6 ,r8 ,0
 		ram[184] = 32'b10000000011000110000000000000001;//-- Addi  r3 ,r3 ,1
-		ram[188] = 32'b10100100001000111111111101100110;//-- BNE r1 ,r3 ,-15 ---> Jump 1
+		ram[188] = 32'b10100100001000111111111111000100;//-- BNE r1 ,r3 ,-15 ---> Jump 1
 		ram[192] = 32'b10000000010000100000000000000001;//-- Addi  r2 ,r2 ,1
-		ram[196] = 32'b10100100001000101111111110000100;//-- BNE r1 ,r2 ,-18 **50  ----> Jump 2
+		ram[196] = 32'b10100100001000101111111110111000;//-- BNE r1 ,r2 ,-18 **50  ----> Jump 2
 		ram[200] = 32'b10000000000000010000010000000000;//-- Addi  r1 ,r0 ,1024
 		ram[204] = 32'b10010000001000100000000000000000;//-- ld ,r2 ,r1 ,0
 		ram[208] = 32'b10010000001000110000000000000100;//-- ld ,r3 ,r1 ,4
@@ -102,12 +102,14 @@ module IFSub (input clk,rst,freez,BrTaken,input [31:0] BrAdder, output [31:0] PC
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-module IFReg(input clk,rst,freez,flush, input[31:0] PCin,instructionIn,output reg [31:0] PC,instruction);
+module IFReg(input clk,rst,freez, BrTaken, input[31:0] PCin,instructionIn,output reg [31:0] PC,instruction);
 	always@(posedge clk,posedge rst) begin
 		if (rst) begin
 			PC <= 32'd0;
 			instruction <= 32'd0;
 		end
+		else if(BrTaken)
+			instruction <= 32'b0;
 		else begin
 			if (freez == 1'b1) begin
 				PC <= PC;
@@ -119,6 +121,5 @@ module IFReg(input clk,rst,freez,flush, input[31:0] PCin,instructionIn,output re
 			end
 		end
 	end
-
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
