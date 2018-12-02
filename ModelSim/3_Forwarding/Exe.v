@@ -1,6 +1,8 @@
 module Exe
 	(
 		input clk,rst,
+		//ForwardDetect
+		input [1:0]ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux,
 		// from ID stage to Mem stage : input
 		input WB_En_IDout,
 		input [1:0] MEM_Signal_ID,
@@ -9,7 +11,9 @@ module Exe
 		input [3:0] EXE_CMD,
 		input [31:0] val1,val2,reg2,PC,
 		input [1:0] Br_type,
-
+		//ForwardDetect
+		input [31:0] ALU_result_ForForward , WB_result_ForForward,
+		
 		output [31:0] Br_Adder,
 		output Br_tacken,
 		// from ID stage to Mem stage : output
@@ -20,26 +24,46 @@ module Exe
 
 	);
 
-	wire[31:0] ALU_result;
+	wire[31:0] ALU_result,reg2__;
 
-	ExeSub _ExeSub (clk,rst,EXE_CMD,val1,val2,reg2,PC,Br_type,ALU_result,Br_Adder,Br_tacken);
-
-	ExeReg _ExeReg(clk,rst,WB_En_IDout,MEM_Signal_ID,dest_ID,PC,ALU_result,reg2,WB_En_EXE,MEM_Signal_EXE,dest_EXE,PC_EXE,ALU_result_EXE,reg2_EXE);
+	ExeSub _ExeSub
+		(
+		clk,rst,
+		//ForwardDetect
+		ALU_vONE_Mux,ALU_vTWO_Mux,
+		EXE_CMD,val1,val2,reg2,PC,Br_type,
+		//ForwardDetect
+		ALU_result_ForForward , WB_result_ForForward,
+		ALU_result,Br_Adder,Br_tacken
+		);
+		
+	//ForwardDetect
+	Mux3to1_32 _valSrc2 (SRC_vTWO_Mux,reg2,ALU_result_ForForward,WB_result_ForForward,reg2__);
+		
+	ExeReg _ExeReg(clk,rst,WB_En_IDout,MEM_Signal_ID,dest_ID,PC,ALU_result,reg2__,WB_En_EXE,MEM_Signal_EXE,dest_EXE,PC_EXE,ALU_result_EXE,reg2_EXE);
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module ExeSub
 	(
 		input clk,rst,
+		//ForwardDetect
+		input [1:0]ALU_vONE_Mux,ALU_vTWO_Mux,
 		input [3:0] EXE_CMD,
 		input [31:0] val1,val2,reg2,PC,
 		input [1:0] Br_type,
-
+		//ForwardDetect
+		input [31:0] ALU_result_ForForward , WB_result_ForForward,
+		
 		output [31:0] ALU_result,Br_Address,
 		output Br_tacken
 	);
-
-	ALU _ALU(val1, val2, EXE_CMD, ALU_result);
+	wire [31:0] val1__,val2__;
+	
+	Mux3to1_32 _val1ALU (ALU_vONE_Mux,val1,ALU_result_ForForward,WB_result_ForForward,val1__);
+	Mux3to1_32 _val2ALU (ALU_vTWO_Mux,val2,ALU_result_ForForward,WB_result_ForForward,val2__);
+	
+	ALU _ALU(val1__, val2__, EXE_CMD, ALU_result);
 	AdderBranch _AdderBranch (PC, val2, Br_Address);
 	ConditionCheck _ConditionCheck (val1, reg2, Br_type, Br_tacken);
 
@@ -130,4 +154,11 @@ module ConditionCheck (input[31:0] val1, val2, input[1:0] br_type, output reg is
 			isBr = 0;
 		end
 	end
+endmodule
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+module Mux3to1_32(input [1:0] s, input [31:0] in0,in1,in2, output [31:0] w);
+	assign w = (s == 2'b0) ? in0 :
+				(s == 2'b01)? in1:
+				(s == 2'b10)?in2 :
+				2'bx;
 endmodule
