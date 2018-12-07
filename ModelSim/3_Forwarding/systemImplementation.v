@@ -6,10 +6,10 @@ wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE,
 //ForwardDetect
 ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux;
 wire [3:0] EXE_CMD_ID;
-wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM, src1, src2;
+wire [4:0] WB_Dest_ID,dest_ID,dest_EXE,dest_MEM, src1, src2, src1Fw, src2Fw;
 wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,ALU_result_EXE,reg2_EXE,ALU_result_MEM,dataMemOut,
-//ForwardDetect
-ALU_result_ForForward , WB_result_ForForward;
+						//ForwardDetect
+						ALU_result_ForForward , WB_result_ForForward;
 
 IF _IF(clk,rst,freez,BrTaken,BrAdder,PC_IF,instruction);
 
@@ -26,7 +26,7 @@ ID _ID (
 	MEM_Signal_ID,Branch_Type_ID,
 	EXE_CMD_ID,
 	val1,val2,reg2_ID,PC_ID,
-	dest_ID, src1, src2
+	dest_ID, src1, src2, src1Fw, src2Fw
 );
 
 Exe _EXE
@@ -43,7 +43,7 @@ Exe _EXE
 	val1,val2,reg2_ID,PC_ID,
 	Branch_Type_ID,
 	//ForwardDetect
-	ALU_result_MEM, //ALU_result_ForForward 
+	ALU_result_EXE, //ALU_result_ForForward 
 	WB_Data_ID, //WB_result_ForForward,
 		
 	BrAdder,
@@ -82,21 +82,22 @@ WB _WB
 HazardDetect _HazardDetect
     (
         WB_En_IDout, WB_En_EXE,isSrc2,
-        src1,src2, dest_ID, dest_EXE,
-        1,
+        src1, src2, dest_ID, dest_EXE,
+        0, MEM_Signal_ID[1],
         freez
     );
 
 ForwardDetect _ForwardDetect
     (
-        src1, src2,
+    	1,
+        src1Fw, src2Fw,
         dest_ID,	//Dest_EXE
 		dest_EXE,	//Dest_MEM
 		dest_MEM,	//Dest_WB
 		
         WB_En_EXE,	//WB_EN_MEM
 		WB_En_MEM,	//WB_EN_WB
-		MEM_R_EN,	//MEM_R_EN
+
 
         ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux
     );
