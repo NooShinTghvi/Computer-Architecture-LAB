@@ -1,6 +1,7 @@
-module MEM
-	(
+module MEM (
 		input clk,rst,
+		// SRAM  UNIT
+		pause,
 		input WB_En_EXE,
 		input [1:0] MEM_Signal_EXE,
 		input [4:0] dest_EXE,
@@ -18,11 +19,10 @@ module MEM
 
 		dataMemOut_in
 	);
-	MEMReg _MEMReg (clk,rst,WB_En_EXE,MEM_Signal_EXE[1],dest_EXE,ALU_result_EXE,dataMemOut_in,WB_En_MEM,MEM_R_EN,dest_MEM,ALU_result_MEM,dataMemOut);
+	MEMReg _MEMReg (clk,rst,pause,WB_En_EXE,MEM_Signal_EXE[1],dest_EXE,ALU_result_EXE,dataMemOut_in,WB_En_MEM,MEM_R_EN,dest_MEM,ALU_result_MEM,dataMemOut);
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module MEMSub
-	(
+module MEMSub (
 		input clk,rst,
 		input [1:0] MEM_Signal_EXE,
 		input [31:0] ALU_result_EXE,reg2_EXE,//address
@@ -43,7 +43,7 @@ module MEMSub
 	//	end
 	//end
 
-    always @(negedge clk) begin
+    always @(posedge clk) begin
 		if (MEM_Signal_EXE[0]) begin
 			dataMem[addrMem] <= reg2_EXE;
 		end
@@ -53,9 +53,10 @@ module MEMSub
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module MEMReg
-	(
+module MEMReg (
 		input clk,rst,
+		// SRAM  UNIT
+		pause,
 		input WB_En_in,MEM_R_ENin,
 		input [4:0] dest_in,
 		input [31:0] ALU_result_in,dataMemOut_in,
@@ -74,11 +75,20 @@ module MEMReg
 			dataMemOut <= 32'd0;
 		end
 		else begin
-			WB_En <= WB_En_in;
-			MEM_R_EN <= MEM_R_ENin;
-			dest <= dest_in;
-			ALU_result <= ALU_result_in;
-			dataMemOut <= dataMemOut_in;
+			if (pause) begin
+				WB_En <= WB_En;
+				MEM_R_EN <= MEM_R_EN;
+				dest <= dest;
+				ALU_result <= ALU_result;
+				dataMemOut <= dataMemOut;
+			end
+			else begin
+				WB_En <= WB_En_in;
+				MEM_R_EN <= MEM_R_ENin;
+				dest <= dest_in;
+				ALU_result <= ALU_result_in;
+				dataMemOut <= dataMemOut_in;
+			end
 		end
 	end
 

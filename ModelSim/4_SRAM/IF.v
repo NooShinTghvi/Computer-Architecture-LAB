@@ -1,9 +1,14 @@
-module IF (input clk,rst,freez, BrTaken,input [31:0] BrAdder, output [31:0] PC,instruction);
+module IF (
+		input clk,rst,freez, BrTaken,
+		// SRAM  UNIT
+		pause,
+		input [31:0] BrAdder, output [31:0] PC,instruction
+	);
 
 	wire [31:0] PCIn,instructionIn;
 
 	IFSub _IFsub (clk,rst,freez,BrTaken,BrAdder,PCIn,instructionIn);
-	IFReg _IFReg (clk,rst,freez, BrTaken, PCIn,instructionIn,PC,instruction);
+	IFReg _IFReg (clk,rst,freez, BrTaken,pause, PCIn,instructionIn,PC,instruction);
 
 endmodule
 
@@ -102,7 +107,12 @@ module IFSub (input clk,rst,freez,BrTaken,input [31:0] BrAdder, output [31:0] PC
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-module IFReg(input clk,rst,freez, BrTaken, input[31:0] PCin,instructionIn,output reg [31:0] PC,instruction);
+module IFReg (
+		input clk,rst,freez, BrTaken,
+		// SRAM  UNIT
+		pause,
+		input[31:0] PCin,instructionIn,output reg [31:0] PC,instruction
+	);
 	always@(posedge clk,posedge rst) begin
 		if (rst) begin
 			PC <= 32'd0;
@@ -111,7 +121,7 @@ module IFReg(input clk,rst,freez, BrTaken, input[31:0] PCin,instructionIn,output
 		else if(BrTaken)
 			instruction <= 32'b0;
 		else begin
-			if (freez == 1'b1) begin
+			if (freez == 1'b1 | pause == 1'b1) begin
 				PC <= PC;
 				instruction <= instruction;
 			end

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ns
 
 module systemImplementation(input clk,rst);
-wire BrTaken, WB_En_IDin, WB_En_IDout, WB_En_EXE, WB_En_MEM, MEM_R_EN, isSrc2, freez;
+wire BrTaken, WB_En_IDin, WB_En_IDout, WB_En_EXE, WB_En_MEM, MEM_R_EN, isSrc2, freeze,pause;
 wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE,
 //ForwardDetect
 ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux;
@@ -11,10 +11,17 @@ wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,
 						//ForwardDetect
 						ALU_result_ForForward , WB_result_ForForward;
 
-IF _IF(clk,rst,freez,BrTaken,BrAdder,PC_IF,instruction);
+IF _IF(
+	clk,rst,freeze,BrTaken,
+	// SRAM  UNIT
+	pause,
+	BrAdder,PC_IF,instruction
+);
 
 ID _ID (
-	clk,rst,freez,BrTaken,
+	clk,rst,freeze,BrTaken,
+	// SRAM  UNIT
+	pause,
 	// from IF
 	instruction,PC_IF,
 	// from WB stage
@@ -29,11 +36,13 @@ ID _ID (
 	dest_ID, src1, src2, src1Fw, src2Fw
 );
 
-Exe _EXE
-(
+Exe _EXE (
 	clk,rst,
+	// SRAM  UNIT
+	pause,
 	//ForwardDetect
 	ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux,
+
 	// from ID stage to Mem stage : input
 	WB_En_IDout,
 	MEM_Signal_ID,
@@ -43,9 +52,9 @@ Exe _EXE
 	val1,val2,reg2_ID,PC_ID,
 	Branch_Type_ID,
 	//ForwardDetect
-	ALU_result_EXE, //ALU_result_ForForward 
+	ALU_result_EXE, //ALU_result_ForForward
 	WB_Data_ID, //WB_result_ForForward,
-		
+
 	BrAdder,
 	BrTaken,
 	// from ID stage to Mem stage : output
@@ -55,9 +64,10 @@ Exe _EXE
 	PC_EXE,ALU_result_EXE,reg2_EXE
 );
 
-MEM _MEM
-(
+MEM _MEM (
 	clk,rst,
+	// SRAM  UNIT
+	pause,
 	WB_En_EXE,
 	MEM_Signal_EXE,
 	dest_EXE,
@@ -68,8 +78,7 @@ MEM _MEM
 	ALU_result_MEM,dataMemOut
 );
 
-WB _WB
-(
+WB _WB (
 	WB_En_MEM,MEM_R_EN,
 	dest_MEM,
 	dataMemOut,ALU_result_MEM,
@@ -79,25 +88,22 @@ WB _WB
 	WB_Data_ID
 );
 
-HazardDetect _HazardDetect
-    (
+HazardDetect _HazardDetect (
         WB_En_IDout, WB_En_EXE,isSrc2,
         src1, src2, dest_ID, dest_EXE,
         0, MEM_Signal_ID[1],
-        freez
+        freeze
     );
 
-ForwardDetect _ForwardDetect
-    (
+ForwardDetect _ForwardDetect (
     	1,
         src1Fw, src2Fw,
         dest_ID,	//Dest_EXE
 		dest_EXE,	//Dest_MEM
 		dest_MEM,	//Dest_WB
-		
+
         WB_En_EXE,	//WB_EN_MEM
 		WB_En_MEM,	//WB_EN_WB
-
 
         ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux
     );

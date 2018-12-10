@@ -43,7 +43,7 @@ module MEMSub
 	//	end
 	//end
 
-    always @(negedge clk) begin
+    always @(posedge clk) begin
 		if (MEM_Signal_EXE[0]) begin
 			dataMem[addrMem] <= reg2_EXE;
 		end

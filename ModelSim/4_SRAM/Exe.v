@@ -1,6 +1,7 @@
-module Exe
-	(
+module Exe (
 		input clk,rst,
+		// SRAM  UNIT
+		pause,
 		//ForwardDetect
 		input [1:0] ALU_vONE_Mux, ALU_vTWO_Mux, SRC_vTWO_Mux,
 		// from ID stage to Mem stage : input
@@ -13,7 +14,7 @@ module Exe
 		input [1:0] Br_type,
 		//ForwardDetect
 		input [31:0] ALU_result_ForForward , WB_result_ForForward,
-		
+
 		output [31:0] Br_Adder,
 		output Br_tacken,
 		// from ID stage to Mem stage : output
@@ -26,8 +27,7 @@ module Exe
 
 	wire [31:0] reg2__, ALU_result;
 
-	ExeSub _ExeSub
-		(
+	ExeSub _ExeSub (
 		clk,rst,
 		//ForwardDetect
 		ALU_vONE_Mux, ALU_vTWO_Mux, SRC_vTWO_Mux,
@@ -37,16 +37,12 @@ module Exe
 		ALU_result, Br_Adder, reg2__,
 		Br_tacken
 		);
-		
-	//ForwardDetect
-	// Mux3to1_32 _valSrc2 (SRC_vTWO_Mux,reg2,ALU_result_ForForward,WB_result_ForForward,reg2__);
-		
-	ExeReg _ExeReg(clk,rst,WB_En_IDout,MEM_Signal_ID,dest_ID,PC,ALU_result,reg2__,WB_En_EXE,MEM_Signal_EXE,dest_EXE,PC_EXE,ALU_result_EXE,reg2_EXE);
+
+	ExeReg _ExeReg(clk,rst,pause,WB_En_IDout,MEM_Signal_ID,dest_ID,PC,ALU_result,reg2__,WB_En_EXE,MEM_Signal_EXE,dest_EXE,PC_EXE,ALU_result_EXE,reg2_EXE);
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module ExeSub
-	(
+module ExeSub (
 		input clk,rst,
 		//ForwardDetect
 		input [1:0] ALU_vONE_Mux, ALU_vTWO_Mux, SRC_vTWO_Mux,
@@ -55,16 +51,16 @@ module ExeSub
 		input [1:0] Br_type,
 		//ForwardDetect
 		input [31:0] ALU_result_ForForward , WB_result_ForForward,
-		
+
 		output [31:0] ALU_result,Br_Address, reg2__,
 		output Br_tacken
 	);
 	wire [31:0] val1__, val2__;
-	
+
 	Mux3to1_32 _val1ALU (ALU_vONE_Mux, val1, ALU_result_ForForward, WB_result_ForForward, val1__);
 	Mux3to1_32 _val2ALU (ALU_vTWO_Mux, val2, ALU_result_ForForward, WB_result_ForForward, val2__);
 	Mux3to1_32 _valSrc2 (SRC_vTWO_Mux, reg2, ALU_result_ForForward, WB_result_ForForward, reg2__);
-	
+
 
 	ALU _ALU(val1__, val2__, EXE_CMD, ALU_result);
 	AdderBranch _AdderBranch (PC, val2__, Br_Address);
@@ -72,9 +68,10 @@ module ExeSub
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module ExeReg
-	(
+module ExeReg (
 		input clk,rst,
+		// SRAM  UNIT
+		pause,
 		// from ID stage to Mem stage
 		input WB_en_in,
 		input [1:0] MEM_Signal_in,
@@ -104,12 +101,22 @@ module ExeReg
 
 		end
 		else begin
-			WB_en <= WB_en_in;
-			MEM_Signal <= MEM_Signal_in;
-			Dest <= Dest_in;
-			PC <= PC_in;
-			ALU_result <= ALU_result_in;
-			reg2 <= reg2_in;
+			if (pause) begin
+				WB_en <= WB_en;
+				MEM_Signal <= MEM_Signal;
+				Dest <= Dest;
+				PC <= PC;
+				ALU_result <= ALU_result;
+				reg2 <= reg2;
+			end
+			else begin
+				WB_en <= WB_en_in;
+				MEM_Signal <= MEM_Signal_in;
+				Dest <= Dest_in;
+				PC <= PC_in;
+				ALU_result <= ALU_result_in;
+				reg2 <= reg2_in;
+			end
 		end
 	end
 
