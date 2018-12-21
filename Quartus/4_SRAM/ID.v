@@ -1,6 +1,7 @@
-module ID
-	(
+module ID (
 		input clk,rst,freez, flush,
+		// SRAM  UNIT
+		pause,
 		// from IF
 		input [31:0] instruction,PCIn,
 		// from WB stage
@@ -45,6 +46,8 @@ module ID
 
 	IDReg _IDReg(
 		clk,rst, flush,
+		// SRAM  UNIT
+		pause,
 		// to stage Register
 		DestWire,
 		reg1,reg2,muxOut,PCIn,
@@ -66,8 +69,7 @@ module ID
 endmodule
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module IDsub
-	(
+module IDsub (
 		input clk,rst,freez,
 		// from IF
 		input [31:0] instruction,
@@ -127,9 +129,10 @@ module IDsub
 	assign source2 = is_imm ? 5'b0 : instruction[20:16];
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module IDReg
-	(
+module IDReg (
 		input clk,rst, flush,
+		// SRAM  UNIT
+		pause,
 		// to stage Register
 		input[4:0] destIn,
 		input[31:0] reg1_in,reg2_in,muxOut,PCIn,
@@ -177,20 +180,35 @@ module IDReg
 				EXE_CMDout <= 4'd0;
 				src1Fw <= 4'd0;
 				src2Fw <= 4'd0;
-			end // if(flush)
+			end
 			else begin
-				destOut <= destIn;
-				val1 <= reg1_in;
-				reg2 <= reg2_in;
-				val2 <= muxOut;
-				PCOut <= PCIn;
-				WB_ENout <= WB_ENin;
-				MEM_SignalOut <= MEM_SignalIn;
-				Branch_TypeOut <= Branch_TypeIn;
-				EXE_CMDout <= EXE_CMDin;
-				src1Fw <= src1;
-				src2Fw <= src2;
-			end // else
+				if(pause) begin
+					destOut <= destOut;
+					val1 <= val1;
+					reg2 <= reg2;
+					val2 <= val2;
+					PCOut <= PCOut;
+					WB_ENout <= WB_ENout;
+					MEM_SignalOut <= MEM_SignalOut;
+					Branch_TypeOut <= Branch_TypeOut;
+					EXE_CMDout <= EXE_CMDout;
+					src1Fw <= src1Fw;
+					src2Fw <= src2Fw;
+				end
+				else begin
+					destOut <= destIn;
+					val1 <= reg1_in;
+					reg2 <= reg2_in;
+					val2 <= muxOut;
+					PCOut <= PCIn;
+					WB_ENout <= WB_ENin;
+					MEM_SignalOut <= MEM_SignalIn;
+					Branch_TypeOut <= Branch_TypeIn;
+					EXE_CMDout <= EXE_CMDin;
+					src1Fw <= src1;
+					src2Fw <= src2;
+				end
+			end
 		end
 	end
 

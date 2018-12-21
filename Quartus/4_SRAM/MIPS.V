@@ -304,7 +304,7 @@ inout	[35:0]	GPIO_0;					//	GPIO Connection 0
 inout	[35:0]	GPIO_1;					//	GPIO Connection 1
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-wire BrTaken, WB_En_IDin, WB_En_IDout, WB_En_EXE, WB_En_MEM, MEM_R_EN, isSrc2, freez;
+wire BrTaken, WB_En_IDin, WB_En_IDout, WB_En_EXE, WB_En_MEM, MEM_R_EN, isSrc2, freeze,pause;
 wire [1:0] MEM_Signal_ID,Branch_Type_ID,MEM_Signal_EXE,
 //ForwardDetect
 ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux;
@@ -314,10 +314,17 @@ wire [31:0] PC_IF,PC_ID,BrAdder,instruction,WB_Data_ID,val1,reg2_ID,val2,PC_EXE,
 						//ForwardDetect
 						ALU_result_ForForward , WB_result_ForForward;
 
-IF _IF(CLOCK_50,SW[0],freez,BrTaken,BrAdder,PC_IF,instruction);
+IF _IF(
+	CLOCK_50,SW[0],freeze,BrTaken,
+	// SRAM  UNIT
+	pause,
+	BrAdder,PC_IF,instruction
+);
 
 ID _ID (
-	CLOCK_50,SW[0],freez,BrTaken,
+	CLOCK_50,SW[0],freeze,BrTaken,
+	// SRAM  UNIT
+	pause,
 	// from IF
 	instruction,PC_IF,
 	// from WB stage
@@ -332,11 +339,13 @@ ID _ID (
 	dest_ID, src1, src2, src1Fw, src2Fw
 );
 
-Exe _EXE
-(
+Exe _EXE (
 	CLOCK_50,SW[0],
+	// SRAM  UNIT
+	pause,
 	//ForwardDetect
 	ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux,
+
 	// from ID stage to Mem stage : input
 	WB_En_IDout,
 	MEM_Signal_ID,
@@ -358,9 +367,18 @@ Exe _EXE
 	PC_EXE,ALU_result_EXE,reg2_EXE
 );
 
-MEM _MEM
-(
+MEM _MEM (
 	CLOCK_50,SW[0],
+	// SRAM  UNIT
+	pause,
+	SRAM_DQ,	//	SRAM Data bus 16 Bits
+	SRAM_ADDR,	//	SRAM Address bus 18 Bits
+	SRAM_UB_N,	//	SRAM High-byte Data Mask
+	SRAM_LB_N,	//	SRAM Low-byte Data Mask
+	SRAM_WE_N,	//	SRAM Write Enable
+	SRAM_CE_N,	//	SRAM Chip Enable
+	SRAM_OE_N,	//	SRAM Output Enable
+
 	WB_En_EXE,
 	MEM_Signal_EXE,
 	dest_EXE,
@@ -371,8 +389,7 @@ MEM _MEM
 	ALU_result_MEM,dataMemOut
 );
 
-WB _WB
-(
+WB _WB (
 	WB_En_MEM,MEM_R_EN,
 	dest_MEM,
 	dataMemOut,ALU_result_MEM,
@@ -382,18 +399,15 @@ WB _WB
 	WB_Data_ID
 );
 
-HazardDetect _HazardDetect
-    (
+HazardDetect _HazardDetect (
         WB_En_IDout, WB_En_EXE,isSrc2,
         src1, src2, dest_ID, dest_EXE,
-        ~SW[3], //Enable
-		MEM_Signal_ID[1],
-        freez
+        0, MEM_Signal_ID[1],
+        freeze
     );
 
-ForwardDetect _ForwardDetect
-    (
-    	SW[3],//Enable
+ForwardDetect _ForwardDetect (
+    	1,
         src1Fw, src2Fw,
         dest_ID,	//Dest_EXE
 		dest_EXE,	//Dest_MEM
@@ -401,7 +415,6 @@ ForwardDetect _ForwardDetect
 
         WB_En_EXE,	//WB_EN_MEM
 		WB_En_MEM,	//WB_EN_WB
-
 
         ALU_vONE_Mux,ALU_vTWO_Mux,SRC_vTWO_Mux
     );
