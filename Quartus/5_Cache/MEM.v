@@ -19,18 +19,22 @@ module MEM (
 		output [4:0] dest_MEM,
 		output [31:0] ALU_result_MEM,dataMemOut
 	);
-	wire [31:0] dataMemOut_in,ALU_result_EXE_;
+	wire WR_EN_SRAM, RD_EN_SRAM, pause_SRAM, readyFlagData64B;
+	wire [31:0] ALU_result_EXE_;
+	wire [31:0] dataMemOut_in32B, dataMemOut_in32B_temp, data_32B_ForSelect;
+	wire [63:0] dataMemOut_in64B;
 	assign ALU_result_EXE_ = ALU_result_EXE - 1024;
 	SRAM _SRAM (
 	            clk,rst,
 	            // From Memory Stage
-	            //MEM_Signal_EXE[0],MEM_Signal_EXE[1],	//WR_EN,RD_EN, #####
+				WR_EN_SRAM, RD_EN_SRAM,	//WR_EN,RD_EN, 
 	            ALU_result_EXE_,reg2_EXE, 	//address, writeData,
 	            //To Next Stage
-	            dataMemOut_in,	//readDate,
+	            dataMemOut_in64B,	//readDate,
 
-	            // For freeze other Stage
-	            pause,
+	            // For Cashe Stage
+	            pause_SRAM,
+				readyFlagData64B,
 
 	            SRAM_DQ,	//	SRAM Data bus 16 Bits
 	            SRAM_ADDR,	//	SRAM Address bus 18 Bits
@@ -40,7 +44,30 @@ module MEM (
 	            SRAM_CE_N,	//	SRAM Chip Enable
 	            SRAM_OE_N	//	SRAM Output Enable
 	);
-	MEMReg _MEMReg (clk,rst,pause,WB_En_EXE,MEM_Signal_EXE[1],dest_EXE,ALU_result_EXE,dataMemOut_in,WB_En_MEM,MEM_R_EN,dest_MEM,ALU_result_MEM,dataMemOut);
+	Cache _chache (
+				clk,rst,
+				// From Memory Stage
+				MEM_Signal_EXE[0],MEM_Signal_EXE[1], //WR_EN,RD_EN,
+				ALU_result_EXE_,  	//address,
+				
+				//To Next Stage
+				dataMemOut_in32B_temp,	//readData,
+				
+				// For freeze other Stage
+				pause,
+				readyFlagData64B,
+				
+				// From SRAM
+				pause_SRAM,
+				dataMemOut_in64B, 	//[63:0] outData_SRAM,
+				
+				//To SRAM
+				WR_EN_SRAM, RD_EN_SRAM
+
+    );
+	assign data_32B_ForSelect = (ALU_result_EXE_[2]) ? dataMemOut_in64B[63:32] : dataMemOut_in64B[31:0];
+	assign dataMemOut_in32B = (readyFlagData64B) ? data_32B_ForSelect : dataMemOut_in32B_temp;
+	MEMReg _MEMReg (clk,rst,pause,WB_En_EXE,MEM_Signal_EXE[1],dest_EXE,ALU_result_EXE,dataMemOut_in32B,WB_En_MEM,MEM_R_EN,dest_MEM,ALU_result_MEM,dataMemOut);
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module MEMSub (
