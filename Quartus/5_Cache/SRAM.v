@@ -37,7 +37,7 @@ module SRAM (
             counter <= 3'd0;
         end
         else begin
-            if (WR_EN == 1'b1 || RD_EN == 1'b1) begin
+            if (WR_EN == 1'b0 || RD_EN == 1'b0) begin
                 counter <= counter + 1'b1;
                 if(counter == 3'd5) begin
                     counter <= 3'd0;
@@ -46,7 +46,7 @@ module SRAM (
         end
     end
 
-     assign pause = ((WR_EN == 1'b1 || RD_EN == 1'b1) && (counter < 3'd5)); //  = 5 -> 0
+     assign pause = (counter < 3'd5); //  = 5 -> 0
      assign SRAM_DQ = (WR_EN) ? SRAM_DQ_ : 16'bZ;
      assign SRAM_ADDR = SRAM_ADDR_;
      assign SRAM_WE_N = SRAM_WE_N_;
@@ -64,7 +64,7 @@ module SRAM (
          end
         else begin
 			readyFlagData64B <= 1'd0;
-            if (WR_EN) begin
+            if (!WR_EN) begin
                 if (counter == 3'd0) begin
                     SRAM_WE_N_ <= 1'b0;
                     SRAM_ADDR_ <= {address[18:2],1'd0};
@@ -77,7 +77,7 @@ module SRAM (
                 end
                 else SRAM_WE_N_ <= 1'b1;
             end
-            else if(RD_EN) begin // 4clk - 18:3  00 to 11
+            else if(!RD_EN) begin // 4clk - 18:3  00 to 11
                 if (counter == 3'd0) begin
                     SRAM_ADDR_ <= {address[18:3],2'b00};
                 end
