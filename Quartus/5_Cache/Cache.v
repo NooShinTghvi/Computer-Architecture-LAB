@@ -97,7 +97,7 @@ module Cache (
         end
         else begin
 			if (RD_EN & hit) begin
-				LRU = ~LRU;
+				LRU[index] = ~LRU[index];
 			end
             if (readyFlagData64B) begin
     			if (LRU[index] == 1'd0) begin

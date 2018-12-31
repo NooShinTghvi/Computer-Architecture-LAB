@@ -38,10 +38,11 @@ module SRAM (
         end
         else begin
             if (WR_EN == 1'b0 || RD_EN == 1'b0) begin
-                counter <= counter + 1'b1;
                 if(counter == 3'd5) begin
                     counter <= 3'd0;
                 end
+                else
+	                counter <= counter + 1'b1;
             end
         end
     end
