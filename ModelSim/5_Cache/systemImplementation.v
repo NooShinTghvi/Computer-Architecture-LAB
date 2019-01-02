@@ -127,6 +127,7 @@ SramMem _SramMem(
 			clk, rst,
 			SRAM_DQ,	//	SRAM Data bus 16 Bits
 			SRAM_ADDR,	//	SRAM Address bus 18 Bits
-            SRAM_WE_N
+            SRAM_WE_N,
+			SRAM_CE_N //***
 		);
 endmodule

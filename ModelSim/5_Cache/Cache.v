@@ -12,7 +12,7 @@ module Cache (
         input pause_SRAM,
         input [63:0] outData_SRAM,
         //To SRAM
-        output WR_EN_SRAM, RD_EN_SRAM
+        output WR_EN_SRAM, RD_EN_SRAM, hit
 
     );
     reg [63:0] valid_W0,valid_W1 ;
@@ -36,8 +36,10 @@ module Cache (
     assign hit0 = ((tag_W0[index] == tag) && valid_W0[index]);
     wire hit1;
     assign hit1 = ((tag_W1[index] == tag) && valid_W1[index]);
-    wire hit;
-    assign hit =   hit0 || hit1 || !(WR_EN || RD_EN);
+    // wire hit;
+    assign hit =   (hit0 || hit1) || !(WR_EN || RD_EN);
+	// wire miss;
+	// assign miss =   ~hit || !(WR_EN || RD_EN);
     wire select ;
     assign select = address[2];
 	//* * * * * * * * * * *  * * * * * * *
@@ -67,8 +69,10 @@ module Cache (
         end
         else begin
 			if (pause_SRAM) begin
-				RD_EN_SRAM__ = 0;
-				RD_EN_SRAM__ = 0;
+				if(RD_EN)
+					RD_EN_SRAM__ = 1;
+				if(WR_EN)
+					WR_EN_SRAM__ = 1;
 			end
             if (RD_EN) begin
                 if(!hit) begin

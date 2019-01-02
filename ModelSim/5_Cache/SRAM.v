@@ -2,6 +2,7 @@ module SRAM (
             input clk,rst,
             // From Memory Stage
             input WR_EN,RD_EN,
+			input hit,
             input [31:0] address, writeData,
             //To Next Stage
             output [63:0] readDate,
@@ -20,9 +21,10 @@ module SRAM (
     );
     assign SRAM_UB_N = 1'b0;
     assign SRAM_LB_N = 1'b0;
-    assign SRAM_CE_N = 1'b0;
+    // assign SRAM_CE_N = 1'b0;
     assign SRAM_OE_N = 1'b0;
 
+	assign SRAM_CE_N = ~RD_EN;
     // 1 -> Read
     //0 -> Write
 
@@ -37,7 +39,7 @@ module SRAM (
             counter <= 3'd0;
         end
         else begin
-            if (WR_EN == 1'b0 || RD_EN == 1'b0) begin
+            if ((WR_EN == 1'b0 || RD_EN == 1'b0)&& ~hit) begin
                 if(counter == 3'd5) begin
                     counter <= 3'd0;
                 end
@@ -48,7 +50,7 @@ module SRAM (
     end
 
      assign pause = (counter < 3'd5); //  = 5 -> 0
-     assign SRAM_DQ = (WR_EN) ? SRAM_DQ_ : 16'bZ;
+     assign SRAM_DQ = (!WR_EN) ? SRAM_DQ_ : 16'bzzzzzzzzzzzzzzzz;
      assign SRAM_ADDR = SRAM_ADDR_;
      assign SRAM_WE_N = SRAM_WE_N_;
      assign readDate = dataTemp;
