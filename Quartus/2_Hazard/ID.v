@@ -13,13 +13,9 @@ module ID
 		output[3:0]EXE_CMDout,
 		output[31:0] val1,val2,reg2_,PCOut,
 		output[4:0] destOut,
-		output[4:0] src1, src2,
-		//Copro : To other stage
-		input freezCos,
-		// To Copro
-		output cntrlCos
+		output[4:0] src1, src2
 	);
-	wire WB_EnWire, _cntrlCos;
+	wire WB_EnWire;
 	wire [1:0] Branch_TypeIn,MEM_SignalIn;
 	wire [3:0] EXE_CMDin;
 	wire [4:0] DestWire;
@@ -45,13 +41,10 @@ module ID
 		// mem_signal
 		MEM_SignalIn,
 		// write back enable
-		WB_EnWire, src1, src2,
-		// To Copro
-		_cntrlCos
-	);
+		WB_EnWire, src1, src2);
 
 	IDReg _IDReg(
-		clk,rst, flush,freezCos,
+		clk,rst, flush,
 		// to stage Register
 		DestWire,
 		reg1,reg2,muxOut,PCIn,
@@ -59,16 +52,13 @@ module ID
 		EXE_CMDin,
 		MEM_SignalIn,
 		WB_EnWire,
-		_cntrlCos,
 		// to stage register
 		destOut,
 		val1,reg2_,val2,PCOut,
 		Branch_TypeOut,
 		EXE_CMDout,
 		MEM_SignalOut,
-		WB_ENout,
-		cntrlCos
-	);
+		WB_ENout);
 endmodule
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -92,9 +82,7 @@ module IDsub
 		output[1:0] MEM_Signal,
 		// write back enable
 		output WB_EN,
-		output[4:0] source1, source2,
-		// To Copro
-		output cntrlCos
+		output[4:0] source1, source2
 	);
 
 	wire is_imm;
@@ -125,7 +113,7 @@ module IDsub
 	wire __WB_EN;
 	wire [1:0] __MEM_Signal,__Branch_Type;
 	wire [3:0] __EXE_CMD;
-	controller _cont(instruction[31:26],__WB_EN,__MEM_Signal,__Branch_Type,__EXE_CMD,is_imm,isSrc2,cntrlCos);
+	controller _cont(instruction[31:26],__WB_EN,__MEM_Signal,__Branch_Type,__EXE_CMD,is_imm,isSrc2);
 
 	assign WB_EN = (freez == 1'b1) ? 1'b0 : __WB_EN;
 	assign MEM_Signal = (freez == 1'b1) ? 2'b0 : __MEM_Signal;
@@ -137,7 +125,7 @@ endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module IDReg
 	(
-		input clk,rst, flush,freezCos,
+		input clk,rst, flush,
 		// to stage Register
 		input[4:0] destIn,
 		input[31:0] reg1_in,reg2_in,muxOut,PCIn,
@@ -145,15 +133,13 @@ module IDReg
 		input[3:0]EXE_CMDin,
 		input[1:0] MEM_SignalIn,
 		input WB_ENin,
-		input _cntrlCos,
 		// to stage register
 		output reg[4:0] destOut,
 		output reg[31:0] val1,reg2,val2,PCOut,
 		output reg[1:0] Branch_TypeOut,
 		output reg[3:0]EXE_CMDout,
 		output reg[1:0] MEM_SignalOut,
-		output reg WB_ENout,
-		output reg cntrlCos
+		output reg WB_ENout
 	);
 
 	always@(posedge clk,posedge rst) begin
@@ -167,7 +153,6 @@ module IDReg
 			MEM_SignalOut <= 2'd0;
 			Branch_TypeOut <= 2'd0;
 			EXE_CMDout <= 4'd0;
-			cntrlCos <= 1'b0;
 		end
 		else begin
 			if(flush) begin
@@ -180,33 +165,17 @@ module IDReg
 				MEM_SignalOut <= 2'd0;
 				Branch_TypeOut <= 2'd0;
 				EXE_CMDout <= 4'd0;
-				cntrlCos <= 1'b0;
 			end // if(flush)
 			else begin
-				if (freezCos) begin 
-					destOut <= destOut;
-					val1 <= val1;
-					reg2 <= reg2;
-					val2 <= val2;
-					PCOut <= PCOut;
-					WB_ENout <= WB_ENout;
-					MEM_SignalOut <= MEM_SignalOut;
-					Branch_TypeOut <= Branch_TypeOut;
-					EXE_CMDout <= EXE_CMDout;
-					cntrlCos <= cntrlCos;
-				end
-				else begin 
-					destOut <= destIn;
-					val1 <= reg1_in;
-					reg2 <= reg2_in;
-					val2 <= muxOut;
-					PCOut <= PCIn;
-					WB_ENout <= WB_ENin;
-					MEM_SignalOut <= MEM_SignalIn;
-					Branch_TypeOut <= Branch_TypeIn;
-					EXE_CMDout <= EXE_CMDin;
-					cntrlCos <= _cntrlCos;
-				end
+				destOut <= destIn;
+				val1 <= reg1_in;
+				reg2 <= reg2_in;
+				val2 <= muxOut;
+				PCOut <= PCIn;
+				WB_ENout <= WB_ENin;
+				MEM_SignalOut <= MEM_SignalIn;
+				Branch_TypeOut <= Branch_TypeIn;
+				EXE_CMDout <= EXE_CMDin;
 			end // else
 		end
 	end
@@ -214,29 +183,28 @@ module IDReg
 
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm, isSrc2, cntrlCos);
+module controller(input [5:0] opcode, output reg WB_En, output reg [1:0] Mem_Signals, output reg [1:0] Branch_Type, output reg [3:0] Exe_Cmd, output reg isImm, isSrc2);
 	always @(*) begin
 		case (opcode)
-			6'b000000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b000000000000; // NOP
-			6'b000001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000000010; // ADD
-			6'b000011: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000010010; // SUB
-			6'b000101: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000100010; // AND
-			6'b000110: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000101010; // OR
-			6'b000111: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000110010; // NOR
-			6'b001000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000111010; // XOR
-			6'b001001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100001000010; // SLA
-			6'b001010: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100001000010; // SLL
-			6'b001011: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100001001010; // SRA
-			6'b001100: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100001010010; // SRL
-			6'b100000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000000100; // ADDI
-			6'b100001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000010100; // SUBI
-			6'b100100: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b110000000100; // LD
-			6'b100101: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b001000000110; // ST
-			6'b101000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b000010000100; // BEZ
-			6'b101001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b000100000110; // BNE
-			6'b101010: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b000110000110; // JMP
-			6'b111111: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b100000000001; // COS Controller -> 1 00 00 0000  0 0 1
-			default :  {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2, cntrlCos} = 12'b000000000000; // NOP
+			6'b000000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00000000000; // NOP
+			6'b000001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000000001; // ADD
+			6'b000011: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000001001; // SUB
+			6'b000101: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000010001; // AND
+			6'b000110: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000010101; // OR
+			6'b000111: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000011001; // NOR
+			6'b001000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000011101; // XOR
+			6'b001001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000100001; // SLA
+			6'b001010: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000100001; // SLL
+			6'b001011: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000100101; // SRA
+			6'b001100: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000101001; // SRL
+			6'b100000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000000010; // ADDI
+			6'b100001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b10000001010; // SUBI
+			6'b100100: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b11000000010; // LD
+			6'b100101: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00100000011; // ST
+			6'b101000: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00001000010; // BEZ
+			6'b101001: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00010000011; // BNE
+			6'b101010: {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00011000011; // JMP
+			default :  {WB_En, Mem_Signals, Branch_Type, Exe_Cmd, isImm, isSrc2} = 11'b00000000000; // NOP
 		endcase
 	end
 endmodule

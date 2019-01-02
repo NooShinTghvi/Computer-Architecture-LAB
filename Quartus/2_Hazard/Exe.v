@@ -16,22 +16,13 @@ module Exe
 		output WB_En_EXE,
 		output [1:0] MEM_Signal_EXE,
 		output [4:0] dest_EXE,
-		output [31:0] PC_EXE,ALU_result_EXE,reg2_EXE,
-		//To other stage
-		output freezCos,
-		// To Copro
-		input cntrlCos
+		output [31:0] PC_EXE,ALU_result_EXE,reg2_EXE
 
 	);
 
 	wire[31:0] ALU_result;
 
-	ExeSub _ExeSub (clk,rst,EXE_CMD,val1,val2,reg2,PC,Br_type,ALU_result,Br_Adder,Br_tacken,
-			//To other stage
-			freezCos,
-			// To Copro
-			cntrlCos
-	);
+	ExeSub _ExeSub (clk,rst,EXE_CMD,val1,val2,reg2,PC,Br_type,ALU_result,Br_Adder,Br_tacken);
 
 	ExeReg _ExeReg(clk,rst,WB_En_IDout,MEM_Signal_ID,dest_ID,PC,ALU_result,reg2,WB_En_EXE,MEM_Signal_EXE,dest_EXE,PC_EXE,ALU_result_EXE,reg2_EXE);
 
@@ -45,21 +36,13 @@ module ExeSub
 		input [1:0] Br_type,
 
 		output [31:0] ALU_result,Br_Address,
-		output Br_tacken,
-		//To other stage
-		output freezCos,
-		// To Copro
-		input cntrlCos
+		output Br_tacken
 	);
-	wire [31:0]  resultCos, _ALU_result;
-	wire readyCos;
-	ALU _ALU(val1, val2, EXE_CMD, _ALU_result);
+
+	ALU _ALU(val1, val2, EXE_CMD, ALU_result);
 	AdderBranch _AdderBranch (PC, val2, Br_Address);
 	ConditionCheck _ConditionCheck (val1, reg2, Br_type, Br_tacken);
-	//Copro (input clk,rst,cntrlCos,input [31:0]  dataCos, output [31:0]  resultCos, output reg readyCos,freezCos);
-	Copro _Copro(clk,rst,cntrlCos,val1,resultCos,freezCos);
 
-	assign ALU_result = (readyCos) ? resultCos : _ALU_result;
 endmodule
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module ExeReg
@@ -104,38 +87,6 @@ module ExeReg
 	end
 
 endmodule
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-module Copro (input clk,rst,cntrlCos,input [31:0]  dataCos, output reg [31:0]  resultCos, output reg  readyCos,freezCos);
-reg  [5:0] counter;
-wire [31:0]  _resultCos;
-//assign resultCos = (readyCos) ? _resultCos : 32'b0;
-always @ (posedge clk) begin
-	freezCos <= 1'b0;
-	readyCos <= 1'b0;
-	if (rst) begin
-		counter <= 6'd0;
-		freezCos <= 1'b0;
-		readyCos <= 1'b0;
-	end
-	else begin
-		if (cntrlCos) begin
-			counter <= counter  + 1'b1;
-			freezCos <= 1'b1;
-			if (counter == 6'd34) begin
-				counter <= 6'd0;
-				readyCos <= 1'b1;
-				resultCos <= _resultCos;
-			end
-		end
-	end
-end
-Cos_Test _cosTest(
-			clk,
-			dataCos,
-			_resultCos
-		);
-
-endmodule // Copro
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 module ALU(input[31:0] val1, val2, input[3:0] selector, output reg[31:0] ALU_res);
 	always @(*) begin
