@@ -12,7 +12,7 @@ module Cache (
         input pause_SRAM,
         input [63:0] outData_SRAM,
         //To SRAM
-        output WR_EN_SRAM, RD_EN_SRAM
+        output WR_EN_SRAM, RD_EN_SRAM,hit
 
     );
     reg [63:0] valid_W0,valid_W1 ;
@@ -36,27 +36,29 @@ module Cache (
     assign hit0 = ((tag_W0[index] == tag) && valid_W0[index]);
     wire hit1;
     assign hit1 = ((tag_W1[index] == tag) && valid_W1[index]);
-    wire hit;
-    assign hit =   hit0 || hit1 || !(WR_EN || RD_EN);
+    //wire hit;
+    assign hit =   ((hit0 || hit1) && !WR_EN) || !(WR_EN || RD_EN);
+	// wire miss;
+	// assign miss =   ~hit || !(WR_EN || RD_EN);
     wire select ;
     assign select = address[2];
 	//* * * * * * * * * * *  * * * * * * *
 	assign pause = pause_SRAM && (!hit);
 	//* * * * * * * * * * *  * * * * * * *
-    assign readData64B = (!rst & RD_EN & hit) ?  
-							( (hit1)?  
+    assign readData64B = (!rst & RD_EN & hit) ?
+							( (hit1)?
 								twoWords_W1[index]:
 								twoWords_W0[index]
 							) :
-							64'bx ;
-							
-	assign readData = (!rst & RD_EN & hit) ? 
+							64'bz ;
+
+	assign readData = (!rst & RD_EN & hit) ?
 							( (select)?
 								readData64B[63:32] :
 								readData64B[31:0]
 							) :
-							32'bx;
-							
+							32'bz;
+
     //* * * * * * * * * * *  * * * * * * *
     always @ (posedge clk) begin
         WR_EN_SRAM__ = 1'd1;
@@ -67,15 +69,17 @@ module Cache (
         end
         else begin
 			if (pause_SRAM) begin
-				RD_EN_SRAM__ = 0;
-				RD_EN_SRAM__ = 0;
+                if(RD_EN)
+                    RD_EN_SRAM__ = 1;
+                if(WR_EN)
+                    WR_EN_SRAM__ = 1;
 			end
-            if (RD_EN) begin
+            if (RD_EN && pause_SRAM) begin
                 if(!hit) begin
                     RD_EN_SRAM__ = 1'd0;
                 end
             end
-            else if(WR_EN)begin
+            else if(WR_EN && pause_SRAM)begin
                 WR_EN_SRAM__ = 1'd0;
             end
         end
@@ -87,34 +91,42 @@ module Cache (
             valid_W0 = 64'd0;
             valid_W1 = 64'd0;
             LRU = 64'd0;
-			for(i = 0; i < 64; i = i+1) begin
-				tag_W0[i] = 10'd0;
-				tag_W1[i] = 10'd0;
-				twoWords_W0[i] = 64'd0;
-				twoWords_W1[i] = 64'd0;
-			end
+			// for(i = 0; i < 64; i = i+1) begin
+			// 	tag_W0[i] = 10'd0;
+			// 	tag_W1[i] = 10'd0;
+			// 	twoWords_W0[i] = 64'd0;
+			// 	twoWords_W1[i] = 64'd0;
+			// end
 
         end
         else begin
-			if (RD_EN & hit) begin
-				LRU[index] = ~LRU[index];
-			end
+			// if (RD_EN & hit) begin
+			// 	LRU[index] = ~LRU[index];
+			// end
+            if(RD_EN && hit0) begin
+				LRU[index] = 1'd0;
+            end
+            else if(RD_EN && hit1) begin
+				LRU[index] = 1'd1;
+            end
             if (readyFlagData64B) begin
-    			if (LRU[index] == 1'd0) begin
+    			if (LRU[index] == 1'd1) begin
     				tag_W0[index] = address[17:9];
     				valid_W0[index] = 1'd1;
     				twoWords_W0[index] = outData_SRAM;
-    				LRU[index] = 1'd1;
+    				LRU[index] = 1'd0;
     			end
     			else begin
     				tag_W1[index] = address[17:9];
     				valid_W1[index] = 1'd1;
     				twoWords_W1[index] = outData_SRAM;
-    				LRU[index] = 1'd0;
+    				LRU[index] = 1'd1;
     			end
             end
-			if(WR_EN) begin
+			if(WR_EN && hit0) begin
 				valid_W0[index] = 1'd0;
+            end
+            else if(WR_EN && hit1) begin
 				valid_W1[index] = 1'd0;
             end
         end

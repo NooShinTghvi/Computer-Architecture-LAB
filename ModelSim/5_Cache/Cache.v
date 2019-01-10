@@ -37,7 +37,7 @@ module Cache (
     wire hit1;
     assign hit1 = ((tag_W1[index] == tag) && valid_W1[index]);
     // wire hit;
-    assign hit =   (hit0 || hit1) || !(WR_EN || RD_EN);
+    assign hit =  (hit0 || hit1) || !(WR_EN || RD_EN);
 	// wire miss;
 	// assign miss =   ~hit || !(WR_EN || RD_EN);
     wire select ;

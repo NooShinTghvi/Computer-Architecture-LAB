@@ -2,6 +2,7 @@ module SRAM (
             input clk,rst,
             // From Memory Stage
             input WR_EN,RD_EN,
+            input hit,
             input [31:0] address, writeData,
             //To Next Stage
             output [63:0] readDate,
@@ -37,7 +38,7 @@ module SRAM (
             counter <= 3'd0;
         end
         else begin
-            if (WR_EN == 1'b0 || RD_EN == 1'b0) begin
+            if ((WR_EN == 1'b0 || RD_EN == 1'b0)&& ~hit) begin
                 if(counter == 3'd5) begin
                     counter <= 3'd0;
                 end
@@ -48,7 +49,7 @@ module SRAM (
     end
 
      assign pause = (counter < 3'd5); //  = 5 -> 0
-     assign SRAM_DQ = (WR_EN) ? SRAM_DQ_ : 16'bZ;
+     assign SRAM_DQ = (!WR_EN) ? SRAM_DQ_ : 16'bZ;
      assign SRAM_ADDR = SRAM_ADDR_;
      assign SRAM_WE_N = SRAM_WE_N_;
      assign readDate = dataTemp;
@@ -58,7 +59,7 @@ module SRAM (
          if (rst) begin
             SRAM_WE_N_ <= 1'b1;
             //dataTemp16 <= 16'd0;
-            dataTemp <= 32'd0;
+            dataTemp <= 64'd0;
             SRAM_DQ_ <= 16'd0;
             SRAM_ADDR_ <= 18'd0;
 			readyFlagData64B <= 1'd0;
@@ -66,12 +67,12 @@ module SRAM (
         else begin
 			readyFlagData64B <= 1'd0;
             if (!WR_EN) begin
-                if (counter == 3'd0) begin
+                if (counter == 3'd1) begin
                     SRAM_WE_N_ <= 1'b0;
                     SRAM_ADDR_ <= {address[18:2],1'd0};
                     SRAM_DQ_ <= writeData[15:0];
                 end
-                else if (counter == 3'd1) begin
+                else if (counter == 3'd2) begin
                     SRAM_WE_N_ <= 1'b0;
                     SRAM_ADDR_ <= {address[18:2],1'd1};
                     SRAM_DQ_ <= writeData[31:16];
@@ -95,9 +96,11 @@ module SRAM (
                     dataTemp <= {16'd0,SRAM_DQ,dataTemp[31:0]};
                 end
 				else if (counter == 3'd4) begin
-					readyFlagData64B <= 1'd1;
                     dataTemp <= {SRAM_DQ,dataTemp[47:0]};
+                    readyFlagData64B <= 1'd1;
                 end
+                // else if (counter == 3'd5) begin
+                // end
             end
         end
      end

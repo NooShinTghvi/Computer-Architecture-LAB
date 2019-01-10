@@ -19,6 +19,7 @@ module MEM (
 		output [4:0] dest_MEM,
 		output [31:0] ALU_result_MEM,dataMemOut
 	);
+	wire hit;
 	wire WR_EN_SRAM, RD_EN_SRAM, pause_SRAM, readyFlagData64B;
 	wire [31:0] ALU_result_EXE_;
 	wire [31:0] dataMemOut_in32B, dataMemOut_in32B_temp, data_32B_ForSelect;
@@ -27,7 +28,8 @@ module MEM (
 	SRAM _SRAM (
 	            clk,rst,
 	            // From Memory Stage
-				WR_EN_SRAM, RD_EN_SRAM,	//WR_EN,RD_EN, 
+				WR_EN_SRAM, RD_EN_SRAM,	//WR_EN,RD_EN,
+				hit,
 	            ALU_result_EXE_,reg2_EXE, 	//address, writeData,
 	            //To Next Stage
 	            dataMemOut_in64B,	//readDate,
@@ -49,20 +51,20 @@ module MEM (
 				// From Memory Stage
 				MEM_Signal_EXE[0],MEM_Signal_EXE[1], //WR_EN,RD_EN,
 				ALU_result_EXE_,  	//address,
-				
+
 				//To Next Stage
 				dataMemOut_in32B_temp,	//readData,
-				
+
 				// For freeze other Stage
 				pause,
 				readyFlagData64B,
-				
+
 				// From SRAM
 				pause_SRAM,
 				dataMemOut_in64B, 	//[63:0] outData_SRAM,
-				
+
 				//To SRAM
-				WR_EN_SRAM, RD_EN_SRAM
+				WR_EN_SRAM, RD_EN_SRAM,hit
 
     );
 	assign data_32B_ForSelect = (ALU_result_EXE_[2]) ? dataMemOut_in64B[63:32] : dataMemOut_in64B[31:0];
